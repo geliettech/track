@@ -24,6 +24,7 @@ The app includes sample tasks, projects, and workspace content to demonstrate th
 - [React Icons](https://react-icons.github.io/react-icons/)
 - `uuid` for task identifiers
 - React Context for task, project, and theme state management
+- supabase
 
 ## Getting started
 
