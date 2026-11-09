@@ -1,28 +1,29 @@
 # Track
 
-Track is a responsive task-management workspace built with Next.js. It brings task planning, project views, and workspace navigation together in a polished interface with light and dark themes.
+Track is a responsive productivity dashboard for planning, prioritizing, and tracking work across projects. The app combines a task overview, project workspaces, and a polished dashboard shell in a modern Next.js interface.
 
-> Track is currently a frontend-only application. It does not include authentication, a backend, or cloud synchronization. Tasks and user-created projects are stored in the browser.
+> Track is a frontend-only project. It does not include authentication, a backend, or cloud sync. Tasks, project data, and activity are stored in the browser with `localStorage`.
 
 ## Features
 
-- **Overview:** Task summary cards, due-date visualization, and a searchable, filterable task schedule.
-- **Projects:** Browse projects and view their tasks as a board, backlog, or timeline; create projects and assign tasks.
-- **Task management:** Create and edit tasks with descriptions, priorities, statuses, due dates, and project assignments.
-- **Independent routes:** Overview, My tasks, Projects, Completed tasks, Settings, plus Messages, People, Activity, Calendar, Notifications, and Workspace.
-- **Responsive sidebar:** Collapsible desktop navigation and a mobile drawer.
-- **Search and themes:** Search tasks and switch between light and dark themes.
-- **Browser persistence:** Tasks and user-created projects are saved in `localStorage`.
+- **Overview dashboard:** summary cards, priority and completion metrics, due-date tracking, and searchable task views.
+- **Project workspaces:** grouped task views with project-level progress and organization.
+- **Task management:** create and edit tasks with titles, descriptions, priorities, statuses, due dates, and project assignments.
+- **Workspace navigation:** dedicated routes for Overview, Projects, Calendar, Messages, Notifications, Activity, Workspace, Users, and Settings.
+- **Responsive layout:** collapsible sidebar for desktop and a mobile-friendly navigation drawer.
+- **Theme switching:** light and dark mode support built into the dashboard shell.
+- **Browser persistence:** task lists, projects, and activity feed are saved locally in the browser.
 
-Messages and teammate information are frontend sample content; they are not connected to a messaging service or user directory.
+The app includes sample tasks, projects, and workspace content to demonstrate the interface without connecting to any external services.
 
 ## Tech stack
 
 - [Next.js](https://nextjs.org/) 16 with the App Router
 - [React](https://react.dev/) 19
-- [Tailwind CSS](https://tailwindcss.com/) 4 and application styles in `app/globals.css`
+- [Tailwind CSS](https://tailwindcss.com/) 4
 - [React Icons](https://react-icons.github.io/react-icons/)
-- React Context for task, project, and theme state
+- `uuid` for task identifiers
+- React Context for task, project, and theme state management
 
 ## Getting started
 
@@ -49,39 +50,56 @@ npm run build
 npm run start
 ```
 
-The production server runs at [http://localhost:3000](http://localhost:3000) by default.
+The production server runs on [http://localhost:3000](http://localhost:3000) by default.
 
 ## Project structure
 
 ```text
 app/
-  (dashboard)/            Shared workspace shell and independent route pages
+  (dashboard)/
+    activity/page.jsx
+    calendar/page.jsx
+    layout.jsx
+    messages/page.jsx
+    notifications/page.jsx
     overview/page.jsx
-    tasks/page.jsx
     projects/page.jsx
-    completed/page.jsx
     settings/page.jsx
-  globals.css             Design tokens, themes, and responsive layouts
-  layout.js               Root layout and application providers
-  page.js                 Redirects to /overview
+    users/page.jsx
+    workspace/page.jsx
+  globals.css
+  layout.js
+  page.js
 components/
-  dashboard/              Shared page headings and auxiliary page adapter
-  layout/                 Persistent shell, navigation, and header
-  Overview.jsx            Workspace overview and task schedule
-  ProjectWorkspace.jsx    Project directory and project task views
-  TaskDialog.jsx          Task creation and editing
-  WorkspacePages.jsx      Messages, people, activity, calendar, and more
-  TaskBoard/              Reusable Kanban board and task cards
+  TaskBoard/
+    TaskBoard.jsx
+    TaskCard.jsx
+  TaskDialog.jsx
+  layout/
+    DashboardShell.jsx
+    Header.jsx
+    Sidebar.jsx
 context/
-  TaskContext.jsx         Task state and browser persistence
-  ProjectContext.jsx      Project state and browser persistence
-  ThemeContext.jsx        Theme state
+  DefaultTasks.jsx
+  ProjectContext.jsx
+  TaskContext.jsx
+  ThemeContext.jsx
+public/
+  sideBar-icons/
 ```
 
 ## Data and privacy
 
-Track does not send tasks or projects to a server. Task data is stored in the browser under `tasks`, and user-created projects under `projects`. Clearing this browser's site data removes those locally saved items. The app starts with example tasks and projects when no saved data is present.
+Track does not send task or project information to a server. Data is stored locally in the browser under keys such as `tasks`, `activity`, and project-related state. Clearing site data removes the saved items, and the app restores the built-in sample content when no saved data is available.
 
 ## Deployment
 
-Track can be deployed to a host that supports Next.js, such as [Vercel](https://vercel.com/). Configure the deployment to install dependencies with `npm install`, build with `npm run build`, and start with `npm run start`.
+Track can be deployed to any host that supports Next.js applications, including [Vercel](https://vercel.com/). Use the standard Next.js deployment flow:
+
+```bash
+npm install
+npm run build
+npm run start
+```
+
+For production hosting, configure the platform to run the app from the project root and serve the built Next.js output.
