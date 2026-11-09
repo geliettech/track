@@ -1,6 +1,7 @@
 ## Project Overview
 
-This project is a modern, task management application designed to organize and track tasks using a Kanban-style board. It provides a clear, intuitive interface for managing project workflows from initial ideation to completion. The application is built to be scalable and maintainable, leveraging a robust and popular technology stack.
+
+Build a task management dashboard with full authentication,  to organize and track tasks using a Kanban-style board. It provides a clear, intuitive interface for managing project workflows from initial ideation to completion. The application is built to be scalable and maintainable, leveraging a robust and popular technology stack.
 
 -----
 
