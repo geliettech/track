@@ -11,7 +11,7 @@ function NavigationLink({ route, pathname, collapsed, onNavigate }) {
   return (
     <Link
       href={route.href}
-      className={`rail-button${active ? " is-active" : ""}`}
+      className={`rail-button flex ${active ? " is-active" : ""}`}
       onClick={onNavigate}
       aria-label={route.label}
       aria-current={active ? "page" : undefined}
@@ -68,7 +68,6 @@ export default function Sidebar({
       <div className="rail-spacer" />
 
       <div className="rail-footer">
-        {!collapsed && <span className="rail-section-label">Workspace</span>}
         {secondaryRoutes.map((route) => (
           <NavigationLink
             key={route.id}
@@ -78,7 +77,8 @@ export default function Sidebar({
             onNavigate={onClose}
           />
         ))}
-        Log out
+       
+        {!collapsed && <span className="rail-section-label">LogOut</span>}
       </div>
     </aside>
   );

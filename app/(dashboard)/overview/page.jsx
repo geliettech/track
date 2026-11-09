@@ -16,6 +16,9 @@ import {
   FiTrendingUp,
 } from "react-icons/fi";
 import { getTaskProject } from "@/context/Projects";
+import { useProjects } from "@/context/ProjectContext";
+import { useTasks } from "@/context/TaskContext";
+import { useDashboardShell } from "@/components/layout/DashboardShell";
 
 const statuses = [
   { id: "todo", label: "To do" },
@@ -78,7 +81,39 @@ function projectColor(project) {
   return ["blue", "green", "pink", "amber"][seed];
 }
 
-export default function Overview({
+export default function OverviewPage() {
+  const { tasks, activity, isLoaded, updateTaskStatus } = useTasks();
+  const { projects } = useProjects();
+  const {
+    search,
+    setSearch,
+    openTaskDialog,
+    navigate,
+    setSelectedProject,
+  } = useDashboardShell();
+
+  const openProjects = (projectName) => {
+    if (projectName) setSelectedProject(projectName);
+    navigate("projects", { preserveProject: Boolean(projectName) });
+  };
+
+  return (
+    <Overview
+      tasks={tasks}
+      activity={activity}
+      projects={projects}
+      isLoaded={isLoaded}
+      search={search}
+      onSearchChange={setSearch}
+      onEditTask={(task) => openTaskDialog({ task })}
+      onUpdateTaskStatus={updateTaskStatus}
+      onAddTask={() => openTaskDialog()}
+      onOpenProjects={openProjects}
+    />
+  );
+}
+
+function Overview({
   tasks,
   activity = [],
   projects = [],

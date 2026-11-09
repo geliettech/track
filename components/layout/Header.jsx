@@ -134,15 +134,15 @@ export default function Header({ tasks = [], onAddTask, search, onSearchChange, 
           {theme === "light" ? <FiMoon size={17} /> : <FiSun size={17} />}
         </button>
 
-        <div className="profile-menu-wrap">
+        <div className="profile-menu-wrap flex">
           <button
             type="button"
-            className="icon-button profile-trigger"
+            className="icon-button profile-trigger flex"
             onClick={() => setProfileOpen((open) => !open)}
             aria-label="Open profile menu"
             aria-expanded={profileOpen}
           >
-            <span className="avatar" aria-hidden="true">JD</span>
+            <span className="avatar" aria-hidden="true">JD</span> <h4>Jordan Davis</h4>
             <FiChevronDown size={13} />
           </button>
           {profileOpen && (
