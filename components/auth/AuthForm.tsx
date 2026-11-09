@@ -7,7 +7,14 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import AuthNotice from "./AuthNotice";
 import AuthSubmitButton from "./AuthSubmitButton";
 import PasswordStrength from "./PasswordStrength";
-import { validateAuthForm, type AuthFormMode, type AuthValues } from "./auth-validation";
+import {
+  validateAuthForm,
+  type AuthFormMode,
+  type AuthValues,
+} from "./auth-validation";
+import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
+import router from "next/dist/shared/lib/router/router";
 
 type FormCopy = {
   eyebrow: string;
@@ -23,28 +30,44 @@ const copy = {
     title: "Good to see you again.",
     description: "Sign in to pick up right where your team left off.",
     button: "Sign in",
-    footer: <>New to Track? <Link href="/register">Create an account</Link></>,
+    footer: (
+      <>
+        New to Track? <Link href="/register">Create an account</Link>
+      </>
+    ),
   },
   register: {
     eyebrow: "GET STARTED",
     title: "Make room for good work.",
     description: "Create your account and bring your projects into focus.",
     button: "Create account",
-    footer: <>Already have an account? <Link href="/login">Sign in</Link></>,
+    footer: (
+      <>
+        Already have an account? <Link href="/login">Sign in</Link>
+      </>
+    ),
   },
   forgot: {
     eyebrow: "ACCOUNT RECOVERY",
     title: "Let’s get you back in.",
     description: "Enter the email address associated with your account.",
     button: "Request reset link",
-    footer: <><Link href="/login">Back to sign in</Link></>,
+    footer: (
+      <>
+        <Link href="/login">Back to sign in</Link>
+      </>
+    ),
   },
   reset: {
     eyebrow: "CHOOSE A NEW PASSWORD",
     title: "Secure your account.",
     description: "Choose a new password you haven’t used before.",
     button: "Save new password",
-    footer: <>Need a fresh link? <Link href="/forgot-password">Request a reset</Link></>,
+    footer: (
+      <>
+        Need a fresh link? <Link href="/forgot-password">Request a reset</Link>
+      </>
+    ),
   },
 } satisfies Record<AuthFormMode, FormCopy>;
 
@@ -62,7 +85,16 @@ type FieldErrorProps = {
 };
 
 function FieldError({ id, children }: FieldErrorProps) {
-  return children ? <span className="auth-field-error" id={id} aria-live="polite" aria-atomic="true">{children}</span> : null;
+  return children ? (
+    <span
+      className="auth-field-error"
+      id={id}
+      aria-live="polite"
+      aria-atomic="true"
+    >
+      {children}
+    </span>
+  ) : null;
 }
 
 type PasswordFieldProps = {
@@ -86,9 +118,14 @@ function PasswordField({
   showStrength = false,
   autoComplete,
 }: PasswordFieldProps) {
+  const supabase = createClient();
+  const router = useRouter();
   const [visible, setVisible] = useState(false);
   const strengthId = `${id}-strength`;
-  const describedBy = [error ? errorId : null, showStrength && value ? strengthId : null].filter(Boolean).join(" ") || undefined;
+  const describedBy =
+    [error ? errorId : null, showStrength && value ? strengthId : null]
+      .filter(Boolean)
+      .join(" ") || undefined;
 
   return (
     <div className="auth-field">
@@ -113,7 +150,11 @@ function PasswordField({
           aria-pressed={visible}
           onClick={() => setVisible((current) => !current)}
         >
-          {visible ? <FiEyeOff aria-hidden="true" /> : <FiEye aria-hidden="true" />}
+          {visible ? (
+            <FiEyeOff aria-hidden="true" />
+          ) : (
+            <FiEye aria-hidden="true" />
+          )}
         </button>
       </div>
       {showStrength && <PasswordStrength password={value} id={strengthId} />}
@@ -127,22 +168,32 @@ type AuthFormProps = {
 };
 
 export default function AuthForm({ mode }: AuthFormProps) {
+  const supabase = createClient();
+  const router = useRouter();
   const content = copy[mode];
   const [values, setValues] = useState<AuthValues>(initialValues);
-  const [errors, setErrors] = useState<Partial<Record<keyof AuthValues, string>>>({});
-  const [notice, setNotice] = useState<{ tone: "info" | "error"; message: string } | null>(null);
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof AuthValues, string>>
+  >({});
+  const [notice, setNotice] = useState<{
+    tone: "info" | "error";
+    message: string;
+  } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!content) throw new Error(`Unsupported authentication form: ${mode}`);
 
   function updateValue(event: ChangeEvent<HTMLInputElement>) {
     const { name, value, checked, type } = event.target;
-    setValues((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
+    setValues((current) => ({
+      ...current,
+      [name]: type === "checkbox" ? checked : value,
+    }));
     setErrors((current) => ({ ...current, [name]: "" }));
     setNotice(null);
   }
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const nextErrors = validateAuthForm(mode, values);
     setErrors(nextErrors);
@@ -150,18 +201,102 @@ export default function AuthForm({ mode }: AuthFormProps) {
     if (Object.keys(nextErrors).length) return;
 
     setIsSubmitting(true);
-    if (mode === "forgot") {
-      setNotice({
-        tone: "info",
-        message: "If an account exists for this address, it can receive a reset link once authentication is connected. No email was sent.",
-      });
-    } else {
+    try {
+      // A. Registration
+      if (mode === "register") {
+        const { data, error } = await supabase.auth.signUp({
+          email: values.email,
+          password: values.password,
+          options: {
+            data: {
+              full_name: values.name,
+            },
+            emailRedirectTo: `${window.location.origin}/auth/confirm`,
+          },
+        });
+
+        if (error) {
+          setNotice({
+            tone: "error",
+            message: error.message,
+          });
+          return;
+        }
+
+        if (data.user && !data.session) {
+          router.push("/verify-email");
+        }
+      }
+
+      // B. Login
+      if (mode === "login") {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: values.email,
+          password: values.password,
+        });
+
+        if (error) {
+          setNotice({
+            tone: "error",
+            message: error.message,
+          });
+          return;
+        }
+
+        router.replace("/overview");
+        router.refresh();
+      }
+
+      // C. Other authentication modes
+      if (mode === "forgot") {
+        const { error } = await supabase.auth.resetPasswordForEmail(
+          values.email,
+          {
+            redirectTo: `${window.location.origin}/auth/confirm?next=/reset-password`,
+          },
+        );
+
+        if (error) {
+          setNotice({
+            tone: "error",
+            message: error.message,
+          });
+        } else {
+          setNotice({
+            tone: "info",
+            message:
+              "If an account exists for this address, a password reset email has been sent.",
+          });
+        }
+      }
+
+      if (mode === "reset") {
+        const { error } = await supabase.auth.updateUser({
+          password: values.password,
+        });
+
+        if (error) {
+          setNotice({
+            tone: "error",
+            message: error.message,
+          });
+          return;
+        }
+
+        router.replace("/login");
+        router.refresh();
+      }
+    } catch (error) {
       setNotice({
         tone: "error",
-        message: "Authentication is not connected yet. Your information was not sent or saved.",
+        message:
+          error instanceof Error
+            ? error.message
+            : "Something went wrong. Please try again.",
       });
+    } finally {
+      setIsSubmitting(false);
     }
-    setIsSubmitting(false);
   }
 
   return (
@@ -221,7 +356,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
             error={errors.password}
             errorId="password-error"
             showStrength={mode === "register" || mode === "reset"}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            autoComplete={
+              mode === "login" ? "current-password" : "new-password"
+            }
           />
         )}
 
@@ -246,7 +383,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
                 checked={values.acceptedTerms}
                 onChange={updateValue}
                 aria-invalid={Boolean(errors.acceptedTerms)}
-                aria-describedby={errors.acceptedTerms ? "terms-error" : undefined}
+                aria-describedby={
+                  errors.acceptedTerms ? "terms-error" : undefined
+                }
               />
               <span>I agree to the Terms of Service and Privacy Policy.</span>
             </label>
@@ -262,13 +401,17 @@ export default function AuthForm({ mode }: AuthFormProps) {
         )}
 
         {notice && <AuthNotice tone={notice.tone}>{notice.message}</AuthNotice>}
-        <AuthSubmitButton isSubmitting={isSubmitting}>{content.button}</AuthSubmitButton>
+        <AuthSubmitButton isSubmitting={isSubmitting}>
+          {content.button}
+        </AuthSubmitButton>
       </form>
 
       <p className="auth-form-footer">{content.footer}</p>
       {mode === "forgot" && (
         <p className="auth-privacy-note">
-          If an account exists for this address, it can receive a reset link once authentication is connected. No email is sent in this UI-only version.
+          If an account exists for this address, it can receive a reset link
+          once authentication is connected. No email is sent in this UI-only
+          version.
         </p>
       )}
     </section>
