@@ -39,3 +39,16 @@ export type ProjectUpdate = {
   deadline: string;
   color?: string;
 };
+
+export type WorkspaceTier = "free" | "pro" | "business";
+
+export type Workspace = {
+  id: string;
+  name: string;
+  slug: string;
+  tier: WorkspaceTier;
+  role: string;
+  avatarColor: string;
+  membersCount: number;
+  description?: string;
+};

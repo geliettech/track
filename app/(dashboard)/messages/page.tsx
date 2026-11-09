@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { FiMessageSquare, FiSend } from "react-icons/fi";
+import {
+  FiCheck,
+  FiLock,
+  FiMessageSquare,
+  FiSend,
+  FiUsers,
+  FiZap,
+} from "react-icons/fi";
+import { useWorkspace } from "@/context/WorkspaceContext";
 
 const sampleConversations = [
   {
@@ -29,10 +37,13 @@ const sampleConversations = [
 ];
 
 export default function MessagesPage() {
+  const { activeWorkspace, canAccessFeature, openUpgradeModal, switchWorkspace, workspaces } =
+    useWorkspace();
   const [selectedId, setSelectedId] = useState(sampleConversations[0].id);
   const [inputMessage, setInputMessage] = useState("");
   const [conversations, setConversations] = useState(sampleConversations);
 
+  const isChatAllowed = canAccessFeature("chat");
   const activeConv = conversations.find((c) => c.id === selectedId) || conversations[0];
 
   const handleSend = (e: React.FormEvent) => {
@@ -55,23 +66,77 @@ export default function MessagesPage() {
     setInputMessage("");
   };
 
+  const proWorkspace = workspaces.find((w) => w.tier === "pro" || w.tier === "business");
+
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto">
-      <div>
-        <div className="flex items-center gap-2">
-          <span className="grid size-8 place-items-center rounded-xl bg-accent-soft text-accent">
-            <FiMessageSquare size={18} />
-          </span>
-          <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
-            Messages & Communication
-          </h1>
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="grid size-8 place-items-center rounded-xl bg-accent-soft text-accent">
+              <FiMessageSquare size={18} />
+            </span>
+            <h1 className="font-display text-2xl font-bold tracking-tight text-ink">
+              Team Messages & Chat
+            </h1>
+          </div>
+          <p className="mt-1 text-xs text-muted">
+            Direct team messaging and contextual conversations around your tasks.
+          </p>
         </div>
-        <p className="mt-1 text-xs text-muted">
-          Direct messaging with your project collaborators.
-        </p>
+
+        {!isChatAllowed && (
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-accent/15 px-3 py-1 text-xs font-bold text-accent self-start sm:self-auto">
+            <FiLock size={12} />
+            <span>Pro Feature</span>
+          </span>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 rounded-2xl border border-line bg-surface shadow-xs overflow-hidden min-h-[480px]">
+      {/* Paywall Banner if Free Tier */}
+      {!isChatAllowed && (
+        <div className="rounded-3xl border border-accent/30 bg-gradient-to-r from-accent/15 via-surface to-surface p-6 sm:p-8 shadow-xs">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-xl">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-wider">
+                <FiZap size={11} /> Team Collaboration & Chat
+              </div>
+              <h2 className="font-display text-xl font-bold text-ink">
+                Manage your tasks free. Upgrade for live team collaboration.
+              </h2>
+              <p className="text-xs text-muted leading-relaxed">
+                Your personal task management is 100% free forever. To chat with teammates, share project threads, and collaborate in real-time, upgrade <strong>{activeWorkspace.name}</strong> to Pro.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row md:flex-col gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={() => openUpgradeModal("Team Chat & Collaboration")}
+                className="cursor-pointer inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-accent px-5 text-xs font-bold text-white shadow-xs hover:bg-accent-hover transition-colors"
+              >
+                <FiZap size={14} /> Upgrade to Pro ($12/mo)
+              </button>
+
+              {proWorkspace && (
+                <button
+                  type="button"
+                  onClick={() => switchWorkspace(proWorkspace.id)}
+                  className="cursor-pointer inline-flex h-9 items-center justify-center gap-1.5 rounded-xl border border-line bg-surface px-4 text-xs font-semibold text-muted hover:bg-surface-hover hover:text-ink transition-colors"
+                >
+                  <FiUsers size={13} /> Switch to {proWorkspace.name}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Messaging Container */}
+      <div className={`relative rounded-2xl border border-line bg-surface shadow-xs overflow-hidden min-h-[480px] grid grid-cols-1 md:grid-cols-3 ${
+        !isChatAllowed ? "opacity-75 pointer-events-none select-none blur-[0.6px]" : ""
+      }`}>
         {/* Conversation List */}
         <div className="border-r border-line p-3 space-y-1">
           <p className="px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-faint">

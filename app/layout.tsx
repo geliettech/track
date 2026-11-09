@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { ProjectProvider } from "@/context/ProjectContext";
 import { TaskProvider } from "@/context/TaskContext";
 import { ThemeProvider } from "@/context/ThemeContext";
+import { WorkspaceProvider } from "@/context/WorkspaceContext";
+import UpgradeModal from "@/components/billing/UpgradeModal";
 
 export const metadata: Metadata = {
   title: "Track — Your work, in focus",
@@ -15,9 +17,14 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-page text-ink font-sans antialiased">
         <ThemeProvider>
-          <ProjectProvider>
-            <TaskProvider>{children}</TaskProvider>
-          </ProjectProvider>
+          <WorkspaceProvider>
+            <ProjectProvider>
+              <TaskProvider>
+                {children}
+                <UpgradeModal />
+              </TaskProvider>
+            </ProjectProvider>
+          </WorkspaceProvider>
         </ThemeProvider>
       </body>
     </html>
