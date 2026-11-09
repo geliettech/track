@@ -235,16 +235,7 @@ export default function Header({
           )}
         </div>
 
-        {/* Theme Switcher */}
-        <button
-          type="button"
-          className="grid size-9 place-items-center rounded-xl border border-line bg-surface text-muted hover:bg-surface-hover hover:text-ink transition-colors"
-          onClick={toggleTheme}
-          aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
-          title={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
-        >
-          {theme === "light" ? <FiMoon size={16} /> : <FiSun size={16} />}
-        </button>
+     
 
         {/* User Profile Menu */}
         <div className="relative" ref={profileRef}>
@@ -307,15 +298,6 @@ export default function Header({
           )}
         </div>
 
-        {/* Quick Add Task Button */}
-        <button
-          type="button"
-          onClick={onAddTask}
-          className="cursor-pointer inline-flex h-9 items-center justify-center gap-1.5 rounded-xl bg-accent px-3 sm:px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-accent-hover transition-colors"
-        >
-          <FiPlus size={15} aria-hidden="true" />
-          <span className="hidden sm:inline">New task</span>
-        </button>
       </div>
     </header>
   );

@@ -150,54 +150,7 @@ export default function Sidebar({
           ))}
         </nav>
 
-        {/* Project Shortcuts Section (Only if not collapsed) */}
-        {!collapsed && (
-          <div className="pt-2">
-            <div className="flex items-center justify-between px-3 mb-2">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-faint">
-                Projects
-              </span>
-              <Link
-                href="/projects"
-                onClick={onClose}
-                className="text-[11px] text-muted hover:text-accent font-medium flex items-center gap-0.5"
-                title="View all projects"
-              >
-                View all
-              </Link>
-            </div>
-            <div className="space-y-1">
-              {projects.slice(0, 5).map((project) => {
-                const projectTasksCount = tasks.filter(
-                  (t) => (t.project || "") === project.name && t.status !== "done"
-                ).length;
-
-                return (
-                  <Link
-                    key={project.name}
-                    href={`/projects?name=${encodeURIComponent(project.name)}`}
-                    onClick={onClose}
-                    className="flex items-center justify-between rounded-xl px-3 py-1.5 text-xs text-muted hover:bg-surface-hover hover:text-ink transition-colors group"
-                  >
-                    <div className="flex items-center gap-2.5 truncate">
-                      <span
-                        className="size-2 rounded-full shrink-0 shadow-xs"
-                        style={{ backgroundColor: project.color }}
-                        aria-hidden="true"
-                      />
-                      <span className="truncate">{project.name}</span>
-                    </div>
-                    {projectTasksCount > 0 && (
-                      <span className="text-[10px] text-faint group-hover:text-muted">
-                        {projectTasksCount}
-                      </span>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
+        
       </div>
 
       {/* Footer Nav */}

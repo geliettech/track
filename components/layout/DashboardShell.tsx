@@ -109,7 +109,7 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <DashboardShellContext.Provider value={contextValue}>
-      <div className={`app-shell min-h-screen bg-[var(--page)]${sidebarCollapsed ? "" : " sidebar-expanded"}`}>
+      <div className="flex min-h-screen bg-page text-ink">
         <Sidebar
           pathname={pathname}
           collapsed={sidebarCollapsed}
@@ -124,13 +124,21 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
         {mobileOpen && (
           <button
             type="button"
-            className="sidebar-overlay fixed inset-0 z-10 bg-slate-950/40"
+            className="fixed inset-0 z-30 bg-slate-950/60 backdrop-blur-xs md:hidden"
             aria-label="Close navigation menu"
             onClick={() => setMobileOpen(false)}
           />
         )}
-        <main className="main-area min-w-0">
-          {storageErrors.map((message) => <div className="storage-error" role="alert" key={message}>{message}</div>)}
+        <div className="flex-1 flex flex-col min-w-0">
+          {storageErrors.map((message) => (
+            <div
+              className="bg-amber-500/10 text-amber-600 dark:text-amber-400 border-b border-amber-500/20 px-4 py-2 text-xs font-medium"
+              role="alert"
+              key={message}
+            >
+              {message}
+            </div>
+          ))}
           <Header
             tasks={tasks}
             onAddTask={() => openTaskDialog()}
@@ -142,8 +150,8 @@ export default function DashboardShell({ children }: { children: ReactNode }) {
             }}
             onNavigate={navigate}
           />
-          <div className="dashboard-content">{children}</div>
-        </main>
+          <main className="flex-1 min-w-0">{children}</main>
+        </div>
       </div>
 
       {dialog && (
