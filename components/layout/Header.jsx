@@ -50,13 +50,13 @@ export default function Header({ tasks = [], onAddTask, search, onSearchChange, 
   }, []);
 
   return (
-    <header className="topbar">
+    <header className="topbar flex-wrap px-1">
       <div className="greeting">
         <h1>{greeting}, Jordan <span aria-hidden="true">✦</span></h1>
         <p>{date} <span aria-hidden="true">·</span> Let&apos;s make today count.</p>
       </div>
 
-      <div className="header-actions">
+      <div className="header-actions flex-wrap">
         <button
           type="button"
           className="icon-button mobile-menu-button"
@@ -120,9 +120,6 @@ export default function Header({ tasks = [], onAddTask, search, onSearchChange, 
               ) : (
                 <p className="notification-empty-copy">Task reminders will show up here when a due date is coming up.</p>
               )}
-              <button className="notification-view-all" type="button" onClick={() => { setNotificationsOpen(false); onNavigate("notifications"); }}>
-                <FiCheck size={14} /> View all notifications
-              </button>
             </div>
           )}
         </div>

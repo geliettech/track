@@ -1,6 +1,6 @@
 import "./globals.css";
-import { TaskProvider } from "@/context/TaskContext";
 import { ProjectProvider } from "@/context/ProjectContext";
+import { TaskProvider } from "@/context/TaskContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 export const metadata = {
@@ -10,7 +10,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body>
         <ThemeProvider>
           <ProjectProvider>

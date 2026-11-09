@@ -67,32 +67,32 @@ function ProjectCreateDialog({
   onSubmit,
 }) {
   return (
-    <div className="modal-backdrop" onMouseDown={(event) => {
+    <div className="fixed inset-0 z-50 grid place-items-center bg-[rgb(18_22_30_/_48%)] p-[18px] backdrop-blur-[3px]" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose();
     }}>
-      <section className="task-modal project-create-modal" role="dialog" aria-modal="true" aria-labelledby="create-project-title">
-        <div className="modal-heading">
+      <section className="max-h-[min(90vh,760px)] w-full max-w-[500px] animate-[modal-in_160ms_ease-out] overflow-y-auto rounded-2xl border border-line bg-surface p-6 shadow-[0_24px_70px_rgb(0_0_0_/_24%)] max-[640px]:p-5" role="dialog" aria-modal="true" aria-labelledby="create-project-title">
+        <div className="mb-5 flex items-start justify-between">
           <div>
-            <h2 id="create-project-title">{editing ? "Edit project" : "Create a project"}</h2>
-            <p>{editing ? "Update your project details." : "Give your next piece of work a home."}</p>
+            <h2 className="m-0 mb-[5px] font-display text-[19px] leading-[1.3] font-bold" id="create-project-title">{editing ? "Edit project" : "Create a project"}</h2>
+            <p className="m-0 text-[11px] text-muted">{editing ? "Update your project details." : "Give your next piece of work a home."}</p>
           </div>
           <button type="button" className="icon-button" onClick={onClose} aria-label="Close dialog"><FiX size={18} /></button>
         </div>
         <form onSubmit={onSubmit}>
-          <div className="form-field">
-            <label htmlFor="project-name">Project name</label>
-            <input id="project-name" value={name} onChange={(event) => onNameChange(event.target.value)} maxLength={50} required autoFocus placeholder="e.g. Product launch" />
+          <div className="mb-[15px] flex flex-col gap-[7px]">
+            <label className="text-[11px] font-semibold" htmlFor="project-name">Project name</label>
+            <input className="min-h-[41px] w-full rounded-lg border border-line bg-surface px-[11px] py-[10px] text-[12px] text-ink" id="project-name" value={name} onChange={(event) => onNameChange(event.target.value)} maxLength={50} required autoFocus placeholder="e.g. Product launch" />
           </div>
-          <div className="form-field">
-            <label htmlFor="project-description">Description</label>
-            <textarea id="project-description" value={description} onChange={(event) => onDescriptionChange(event.target.value)} maxLength={160} placeholder="What are you working toward?" />
+          <div className="mb-[15px] flex flex-col gap-[7px]">
+            <label className="text-[11px] font-semibold" htmlFor="project-description">Description</label>
+            <textarea className="min-h-[90px] w-full resize-y rounded-lg border border-line bg-surface px-[11px] py-[10px] text-[12px] text-ink" id="project-description" value={description} onChange={(event) => onDescriptionChange(event.target.value)} maxLength={160} placeholder="What are you working toward?" />
           </div>
-          <div className="form-field">
-            <label htmlFor="project-deadline">Deadline</label>
-            <input id="project-deadline" type="date" value={deadline} onChange={(event) => onDeadlineChange(event.target.value)} />
+          <div className="mb-[15px] flex flex-col gap-[7px]">
+            <label className="text-[11px] font-semibold" htmlFor="project-deadline">Deadline</label>
+            <input className="min-h-[41px] w-full rounded-lg border border-line bg-surface px-[11px] py-[10px] text-[12px] text-ink" id="project-deadline" type="date" value={deadline} onChange={(event) => onDeadlineChange(event.target.value)} />
           </div>
-          {error && <p className="form-error" role="alert">{error}</p>}
-          <div className="modal-actions">
+          {error && <p className="-mt-[7px] mb-3 text-[11px] text-red" role="alert">{error}</p>}
+          <div className="mt-[22px] flex justify-end gap-[9px]">
             <button type="button" className="secondary-button" onClick={onClose}>Cancel</button>
             <button type="submit" className="primary-button">{editing ? "Save changes" : "Create project"}</button>
           </div>
@@ -662,19 +662,19 @@ export default function ProjectWorkspace({
             />
           )}
           {showDeleteProject && (
-            <div className="modal-backdrop" onMouseDown={(event) => {
+            <div className="fixed inset-0 z-50 grid place-items-center bg-[rgb(18_22_30_/_48%)] p-[18px] backdrop-blur-[3px]" onMouseDown={(event) => {
               if (event.target === event.currentTarget) setShowDeleteProject(false);
             }}>
-              <section className="task-modal" role="dialog" aria-modal="true" aria-labelledby="delete-project-title">
-                <div className="modal-heading">
+              <section className="max-h-[min(90vh,760px)] w-full max-w-[500px] animate-[modal-in_160ms_ease-out] overflow-y-auto rounded-2xl border border-line bg-surface p-6 shadow-[0_24px_70px_rgb(0_0_0_/_24%)] max-[640px]:p-5" role="dialog" aria-modal="true" aria-labelledby="delete-project-title">
+                <div className="mb-5 flex items-start justify-between">
                   <div>
-                    <h2 id="delete-project-title">Delete {project.name}?</h2>
-                    <p>Tasks in this project will move to another project.</p>
+                    <h2 className="m-0 mb-[5px] font-display text-[19px] leading-[1.3] font-bold" id="delete-project-title">Delete {project.name}?</h2>
+                    <p className="m-0 text-[11px] text-muted">Tasks in this project will move to another project.</p>
                   </div>
                   <button type="button" className="icon-button" onClick={() => setShowDeleteProject(false)} aria-label="Close dialog"><FiX size={18} /></button>
                 </div>
-                {projectError && <p className="form-error" role="alert">{projectError}</p>}
-                <div className="modal-actions">
+                {projectError && <p className="-mt-[7px] mb-3 text-[11px] text-red" role="alert">{projectError}</p>}
+                <div className="mt-[22px] flex justify-end gap-[9px]">
                   <button type="button" className="secondary-button" onClick={() => { setShowDeleteProject(false); setProjectError(""); }}>Cancel</button>
                   <button type="button" className="primary-button danger-button" onClick={confirmDeleteProject}>Delete project</button>
                 </div>
