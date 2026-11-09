@@ -8,6 +8,7 @@ const ProjectContext = createContext(null);
 export function ProjectProvider({ children }) {
   const [projects, setProjects] = useState(PROJECTS);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [storageError, setStorageError] = useState("");
 
   useEffect(() => {
     try {
@@ -24,12 +25,21 @@ export function ProjectProvider({ children }) {
             return true;
           });
           setProjects([...PROJECTS, ...extraProjects]);
+        } else if (Array.isArray(parsed.projects)) {
+          setProjects(parsed.projects.filter((project) =>
+            project &&
+            typeof project.name === "string" &&
+            project.name.trim() &&
+            typeof project.description === "string"
+          ));
         } else {
-          console.error("Saved projects were not a list. Restoring default projects.");
+          console.error("Saved projects had an invalid format. Restoring default projects.");
+          setStorageError("Saved projects could not be read. Default projects were restored.");
         }
       }
     } catch (error) {
       console.error("Unable to load saved projects.", error);
+      setStorageError("Unable to load projects from this browser.");
     } finally {
       setIsLoaded(true);
     }
@@ -38,13 +48,15 @@ export function ProjectProvider({ children }) {
   useEffect(() => {
     if (!isLoaded) return;
     try {
-      localStorage.setItem("projects", JSON.stringify(projects.slice(PROJECTS.length)));
+      localStorage.setItem("projects", JSON.stringify({ version: 2, projects }));
+      setStorageError("");
     } catch (error) {
       console.error("Unable to save projects to browser storage.", error);
+      setStorageError("Unable to save projects. Check your browser storage settings.");
     }
   }, [isLoaded, projects]);
 
-  const createProject = (name, description) => {
+  const createProject = (name, description, deadline = "") => {
     const cleanName = name.trim();
     if (!cleanName) throw new Error("Enter a name for your project.");
     if (projects.some((project) => project.name.toLowerCase() === cleanName.toLowerCase())) {
@@ -55,13 +67,45 @@ export function ProjectProvider({ children }) {
       name: cleanName,
       description: description.trim() || "A new project, ready to take shape.",
       color: colors[projects.length % colors.length],
+      deadline,
     };
     setProjects((current) => [...current, project]);
     return project;
   };
 
+  const updateProject = (currentName, updates) => {
+    const cleanName = updates.name.trim();
+    if (!cleanName) throw new Error("Enter a name for your project.");
+    if (projects.some((project) =>
+      project.name.toLowerCase() === cleanName.toLowerCase() &&
+      project.name !== currentName
+    )) {
+      throw new Error("A project with that name already exists.");
+    }
+    const updatedProject = projects.find((project) => project.name === currentName);
+    if (!updatedProject) throw new Error("This project no longer exists.");
+    const nextProject = {
+      ...updatedProject,
+      name: cleanName,
+      description: updates.description.trim() || "A project, ready to take shape.",
+      deadline: updates.deadline,
+    };
+    setProjects((current) =>
+      current.map((project) => project.name === currentName ? nextProject : project)
+    );
+    return nextProject;
+  };
+
+  const deleteProject = (name) => {
+    if (projects.length < 2) throw new Error("Keep at least one project in your workspace.");
+    if (!projects.some((project) => project.name === name)) {
+      throw new Error("This project no longer exists.");
+    }
+    setProjects((current) => current.filter((project) => project.name !== name));
+  };
+
   return (
-    <ProjectContext.Provider value={{ projects, createProject, isLoaded }}>
+    <ProjectContext.Provider value={{ projects, createProject, updateProject, deleteProject, isLoaded, storageError }}>
       {children}
     </ProjectContext.Provider>
   );

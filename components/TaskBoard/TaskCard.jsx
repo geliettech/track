@@ -18,16 +18,18 @@ const statusLabels = {
 
 function formatDueDate(value) {
   if (!value) return null;
-  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    const date = new Date(`${value}T12:00:00`);
-    return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
-  }
-  return value;
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T12:00:00`) : new Date(value);
+  return Number.isNaN(date.getTime())
+    ? value
+    : new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
 }
 
 function isOverdue(value, status) {
-  if (!value || status === "done" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  return value < new Date().toISOString().slice(0, 10);
+  if (!value || status === "done") return false;
+  const dueDate = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T00:00:00`) : new Date(value);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return !Number.isNaN(dueDate.getTime()) && dueDate < today;
 }
 
 export default function TaskCard({ task, onEdit, onNotify }) {
@@ -105,12 +107,11 @@ export default function TaskCard({ task, onEdit, onNotify }) {
         </button>
       </div>
 
-      {dateLabel && (
+      {(dateLabel || task.project) && (
         <div className={`task-meta${isOverdue(task.date, task.status) ? " is-overdue" : ""}`}>
-          <FiCalendar size={13} aria-hidden="true" />
-          <span>{dateLabel}</span>
+          {dateLabel && <><FiCalendar size={13} aria-hidden="true" /><span>{dateLabel}</span></>}
           {isOverdue(task.date, task.status) && <span>Overdue</span>}
-          {task.description && <span className="task-project">{task.project || ""}</span>}
+          {task.project && <span className="task-project">{task.project}</span>}
         </div>
       )}
     </article>

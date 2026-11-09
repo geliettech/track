@@ -2,9 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+  FiArrowUpRight,
+  FiBriefcase,
   FiCheckCircle,
   FiMoon,
   FiSun,
+  FiUser,
   FiX,
 } from "react-icons/fi";
 import Header from "@/components/Header";
@@ -14,6 +17,7 @@ import SideBar from "@/components/SideBar";
 import TaskDialog from "@/components/TaskDialog";
 import WorkspacePages from "@/components/WorkspacePages";
 import { useTasks } from "@/context/TaskContext";
+import { useProjects } from "@/context/ProjectContext";
 import { useTheme } from "@/context/ThemeContext";
 
 const sectionTitles = {
@@ -28,30 +32,62 @@ const sectionTitles = {
   settings: "Settings",
 };
 
-function SettingsPanel() {
+function SettingsPanel({ onNavigate }) {
   const { theme, setLight, setDark } = useTheme();
   return (
-    <section className="settings-panel">
-      <div>
-        <p className="eyebrow">Preferences</p>
-        <h3>Make Track yours</h3>
-        <p>Choose the appearance that feels right for your workspace.</p>
+    <section className="settings-page" aria-label="Settings">
+      <div className="settings-panel">
+        <div className="settings-section-heading">
+          <span className="settings-section-icon"><FiUser size={17} /></span>
+          <div>
+            <p className="eyebrow">Your account</p>
+            <h3>Profile settings</h3>
+            <p>Your profile is used across Track and your workspace.</p>
+          </div>
+        </div>
+        <div className="settings-profile">
+          <span className="avatar" aria-hidden="true">JD</span>
+          <span><strong>Jordan Davis</strong><small>Workspace owner</small></span>
+        </div>
       </div>
-      <div className="theme-options" role="group" aria-label="Color theme">
-        <button type="button" className={`secondary-button${theme === "light" ? " selected" : ""}`} onClick={setLight}>
-          <FiSun size={16} /> Light
-        </button>
-        <button type="button" className={`secondary-button${theme === "dark" ? " selected" : ""}`} onClick={setDark}>
-          <FiMoon size={16} /> Dark
-        </button>
+
+      <div className="settings-panel">
+        <div className="settings-section-heading">
+          <span className="settings-section-icon"><FiSun size={17} /></span>
+          <div>
+            <p className="eyebrow">Preferences</p>
+            <h3>Appearance</h3>
+            <p>Choose the theme that feels right for your workspace.</p>
+          </div>
+        </div>
+        <div className="theme-options" role="group" aria-label="Color theme">
+          <button type="button" className={`secondary-button${theme === "light" ? " selected" : ""}`} onClick={setLight}>
+            <FiSun size={16} /> Light
+          </button>
+          <button type="button" className={`secondary-button${theme === "dark" ? " selected" : ""}`} onClick={setDark}>
+            <FiMoon size={16} /> Dark
+          </button>
+        </div>
+        <p className="settings-note">Your preferences are saved in this browser.</p>
       </div>
-      <p className="settings-note">Your tasks and preferences are saved in this browser.</p>
+
+      <button type="button" className="settings-panel settings-workspace-link" onClick={() => onNavigate("workspace")}>
+        <span className="settings-section-icon"><FiBriefcase size={17} /></span>
+        <span className="settings-workspace-copy">
+          <small className="eyebrow">Workspace</small>
+          <strong>Manage workspace</strong>
+          <span>View workspace details, members, and projects.</span>
+        </span>
+        <FiArrowUpRight className="settings-workspace-arrow" size={17} />
+      </button>
     </section>
   );
 }
 
 export default function Dashboard() {
-  const { tasks, createTask, updateTask } = useTasks();
+  const { tasks, activity, isLoaded, storageError: taskStorageError, createTask, updateTask } = useTasks();
+  const { projects: workspaceProjects, storageError: projectStorageError } = useProjects();
+  const storageErrors = [taskStorageError, projectStorageError].filter(Boolean);
   const [activeSection, setActiveSection] = useState("overview");
   const [selectedProject, setSelectedProject] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
@@ -106,7 +142,9 @@ export default function Dashboard() {
         />
       )}
       <main className="main-area">
+        {storageErrors.map((message) => <div className="storage-error" role="alert" key={message}>{message}</div>)}
         <Header
+          tasks={tasks}
           onAddTask={() => setDialog({ task: null, status: "todo", project: selectedProject || undefined })}
           search={search}
           onSearchChange={setSearch}
@@ -114,6 +152,7 @@ export default function Dashboard() {
             setSidebarCollapsed(false);
             setMobileOpen(true);
           }}
+          onNavigate={(section) => setActiveSection(section)}
         />
 
         <div className="dashboard-content">
@@ -126,13 +165,22 @@ export default function Dashboard() {
           </div>}
 
           {activeSection === "settings" ? (
-            <SettingsPanel />
+            <SettingsPanel onNavigate={setActiveSection} />
           ) : activeSection === "overview" ? (
             <Overview
               tasks={tasks}
+              activity={activity}
+              projects={workspaceProjects}
+              isLoaded={isLoaded}
               search={search}
               onSearchChange={setSearch}
               onEditTask={(task) => setDialog({ task })}
+              onUpdateTaskStatus={(id, status) => updateTask(id, { status })}
+              onAddTask={() => setDialog({ task: null, status: "todo" })}
+              onOpenProjects={(projectName) => {
+                setSelectedProject(projectName || null);
+                setActiveSection("projects");
+              }}
             />
           ) : activeSection === "projects" ? (
             <ProjectWorkspace
@@ -153,12 +201,13 @@ export default function Dashboard() {
             <WorkspacePages
               section={activeSection}
               tasks={tasks}
+              activity={activity}
               onNotify={notify}
               onEditTask={(task) => setDialog({ task })}
               onAddTask={() => setDialog({ task: null, status: "todo" })}
             />
           ) : (
-            <SettingsPanel />
+            <SettingsPanel onNavigate={setActiveSection} />
           )}
         </div>
       </main>

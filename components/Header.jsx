@@ -5,6 +5,7 @@ import {
   FiBell,
   FiCheck,
   FiChevronDown,
+  FiClock,
   FiMenu,
   FiMoon,
   FiPlus,
@@ -12,8 +13,19 @@ import {
   FiSun,
 } from "react-icons/fi";
 import { useTheme } from "@/context/ThemeContext";
+import { getTaskProject } from "@/context/Projects";
 
-export default function Header({ onAddTask, search, onSearchChange, onMenuClick }) {
+function getReminderDate(value) {
+  if (!value) return null;
+  const date = /^\d{4}-\d{2}-\d{2}$/.test(value) ? new Date(`${value}T12:00:00`) : new Date(value);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function formatReminderDate(date) {
+  return new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric" }).format(date);
+}
+
+export default function Header({ tasks = [], onAddTask, search, onSearchChange, onMenuClick, onNavigate }) {
   const { theme, toggleTheme } = useTheme();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
@@ -23,6 +35,14 @@ export default function Header({ onAddTask, search, onSearchChange, onMenuClick 
     month: "long",
     day: "numeric",
   }).format(new Date());
+  const reminders = tasks
+    .filter((task) => task.status !== "done" && task.date)
+    .map((task) => ({ task, date: getReminderDate(task.date) }))
+    .filter(({ date }) => date)
+    .sort((left, right) => left.date - right.date);
+  const reminderCount = reminders.length;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   useEffect(() => {
     const hour = new Date().getHours();
@@ -66,14 +86,42 @@ export default function Header({ onAddTask, search, onSearchChange, onMenuClick 
             aria-expanded={notificationsOpen}
           >
             <FiBell size={17} />
-            <span className="notification-dot" />
+            {reminderCount > 0 && <span className="notification-dot" />}
           </button>
           {notificationsOpen && (
-            <div className="popover">
-              <h4>You&apos;re all caught up</h4>
-              <p>New task updates and reminders will appear here.</p>
-              <button type="button" onClick={() => setNotificationsOpen(false)}>
-                <FiCheck size={14} /> Mark all as read
+            <div className="popover notification-popover">
+              <div className="notification-popover-heading">
+                <div>
+                  <h4>Notifications</h4>
+                  <p>{reminderCount ? `${reminderCount} task reminder${reminderCount === 1 ? "" : "s"}` : "You’re all caught up"}</p>
+                </div>
+                <span className="notification-count">{reminderCount}</span>
+              </div>
+              {reminderCount ? (
+                <div className="notification-list">
+                  {reminders.slice(0, 4).map(({ task, date }) => {
+                    const overdue = date < today;
+                    return (
+                      <button
+                        type="button"
+                        className="notification-entry"
+                        key={task.id}
+                        onClick={() => { setNotificationsOpen(false); onNavigate("notifications"); }}
+                      >
+                        <span className={`notification-entry-icon${overdue ? " overdue" : ""}`}><FiClock size={14} /></span>
+                        <span className="notification-entry-copy">
+                          <strong>{task.title}</strong>
+                          <small>{overdue ? "Overdue" : "Due"} {formatReminderDate(date)} · {getTaskProject(task)}</small>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="notification-empty-copy">Task reminders will show up here when a due date is coming up.</p>
+              )}
+              <button className="notification-view-all" type="button" onClick={() => { setNotificationsOpen(false); onNavigate("notifications"); }}>
+                <FiCheck size={14} /> View all notifications
               </button>
             </div>
           )}
@@ -104,10 +152,10 @@ export default function Header({ onAddTask, search, onSearchChange, onMenuClick 
             <div className="popover">
               <h4>Jordan Davis</h4>
               <p>Personal workspace</p>
-              <button type="button" onClick={() => setProfileOpen(false)}>
+              <button type="button" onClick={() => { setProfileOpen(false); onNavigate("settings"); }}>
                 Profile settings
               </button>
-              <button type="button" onClick={() => setProfileOpen(false)}>
+              <button type="button" onClick={() => { setProfileOpen(false); onNavigate("workspace"); }}>
                 Manage workspace
               </button>
             </div>

@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import {
-  FiArrowUpRight,
   FiBell,
   FiBriefcase,
   FiCalendar,
@@ -100,7 +99,31 @@ function MessagesPage() {
   const [conversations, setConversations] = useState(startingConversations);
   const [selectedId, setSelectedId] = useState(startingConversations[0].id);
   const [reply, setReply] = useState("");
+  const [composerOpen, setComposerOpen] = useState(false);
+  const [recipient, setRecipient] = useState(teammates[1].name);
+  const [firstMessage, setFirstMessage] = useState("");
   const selected = conversations.find((conversation) => conversation.id === selectedId);
+
+  const startConversation = (event) => {
+    event.preventDefault();
+    const text = firstMessage.trim();
+    const person = teammates.find((user) => user.name === recipient);
+    if (!text || !person) return;
+    const conversation = {
+      id: `local-${Date.now()}`,
+      name: person.name,
+      initials: person.initials,
+      color: person.color,
+      project: "Personal workspace",
+      preview: text,
+      time: "Now",
+      messages: [{ from: "You", text }],
+    };
+    setConversations((current) => [conversation, ...current]);
+    setSelectedId(conversation.id);
+    setFirstMessage("");
+    setComposerOpen(false);
+  };
 
   const sendReply = (event) => {
     event.preventDefault();
@@ -126,7 +149,25 @@ function MessagesPage() {
       <PageTitle eyebrow="Team communication" title="Messages" description="Keep up with the conversations around your work." />
       <div className="messages-layout">
         <div className="conversation-list">
-          <div className="conversation-list-heading"><span>Conversations</span><button type="button" aria-label="New message"><FiPlus size={15} /></button></div>
+          <div className="conversation-list-heading">
+            <span>Conversations</span>
+            <button type="button" aria-label="New message" aria-expanded={composerOpen} onClick={() => setComposerOpen((open) => !open)}><FiPlus size={15} /></button>
+          </div>
+          {composerOpen && (
+            <form className="new-conversation-form" onSubmit={startConversation}>
+              <label>
+                <span>To</span>
+                <select value={recipient} onChange={(event) => setRecipient(event.target.value)} aria-label="Message recipient">
+                  {teammates.filter((user) => user.initials !== "JD").map((user) => <option key={user.initials} value={user.name}>{user.name}</option>)}
+                </select>
+              </label>
+              <label>
+                <span>Message</span>
+                <input value={firstMessage} onChange={(event) => setFirstMessage(event.target.value)} placeholder="Write a message..." />
+              </label>
+              <button type="submit" className="primary-button" disabled={!firstMessage.trim()}>Start conversation</button>
+            </form>
+          )}
           {conversations.map((conversation) => (
             <button type="button" className={`conversation-item${selectedId === conversation.id ? " active" : ""}`} key={conversation.id} onClick={() => setSelectedId(conversation.id)}>
               <span className={`workspace-avatar ${conversation.color}`}>{conversation.initials}</span>
@@ -162,14 +203,13 @@ function MessagesPage() {
   );
 }
 
-function UsersPage({ onNotify }) {
+function UsersPage() {
   return (
     <section className="workspace-page">
       <PageTitle
         eyebrow="People"
         title="Users"
         description="The people who make up your workspace."
-        action={<button type="button" className="primary-button" onClick={() => onNotify("Workspace invitations are not connected yet.")}><FiPlus size={15} /> Invite user</button>}
       />
       <div className="users-summary"><FiUsers size={16} /><strong>{teammates.length} members</strong><span>in your personal workspace</span></div>
       <div className="users-grid">
@@ -178,7 +218,6 @@ function UsersPage({ onNotify }) {
             <span className={`workspace-avatar user-avatar ${user.color}`}>{user.initials}</span>
             <strong>{user.name}</strong>
             <span>{user.role}</span>
-            <button type="button" className="secondary-button" onClick={() => onNotify(`${user.name} is part of your workspace.`)}>View profile <FiArrowUpRight size={13} /></button>
           </article>
         ))}
       </div>
@@ -186,35 +225,21 @@ function UsersPage({ onNotify }) {
   );
 }
 
-function ActivityPage({ tasks }) {
-  const events = useMemo(() => {
-    const labels = {
-      todo: "is in the to do list",
-      inprogress: "is in progress",
-      done: "was completed",
-    };
-    return tasks.map((task) => ({
-      id: task.id,
-      title: task.title,
-      project: getTaskProject(task),
-      status: task.status,
-      label: labels[task.status] || "was updated",
-      date: task.date,
-    }));
-  }, [tasks]);
-
+function ActivityPage({ activity }) {
   return (
     <section className="workspace-page">
-      <PageTitle eyebrow="Workspace updates" title="Activity" description="A live snapshot of tasks across your workspace." />
+      <PageTitle eyebrow="Workspace updates" title="Activity" description="A running history of changes across your workspace." />
       <div className="activity-feed">
-        {events.length ? events.map((event) => (
+        {activity.length ? activity.map((event) => (
           <article className="activity-item" key={event.id}>
-            <span className={`activity-event-icon ${event.status}`}><FiCheckCircle size={14} /></span>
+            <span className={`activity-event-icon ${event.action === "completed" ? "done" : event.action === "deleted" ? "todo" : "inprogress"}`}><FiCheckCircle size={14} /></span>
             <div className="activity-item-copy">
               <strong>{event.title}</strong>
-              <p>{event.label} in <span>{event.project}</span></p>
+              <p>{event.action} {event.action === "deleted" ? "from" : "in"} <span>{event.project || "Personal"}</span></p>
             </div>
-            <time>{event.date ? formatTaskDate(event.date, { month: "short", day: "numeric", year: "numeric" }) : "No due date"}</time>
+            <time dateTime={event.createdAt}>
+              {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(new Date(event.createdAt))}
+            </time>
           </article>
         )) : <div className="workspace-empty">Task updates will show here as you work.</div>}
       </div>
@@ -279,7 +304,8 @@ function CalendarPage({ tasks, onEditTask, onAddTask }) {
 
 function NotificationsPage({ tasks }) {
   const notifications = useMemo(() => {
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     return tasks
       .filter((task) => task.status !== "done" && task.date)
       .map((task) => ({ task, date: getTaskDate(task.date) }))
@@ -289,7 +315,7 @@ function NotificationsPage({ tasks }) {
         title: task.title,
         project: getTaskProject(task),
         date,
-        overdue: /^\d{4}-\d{2}-\d{2}$/.test(task.date) && task.date < today,
+        overdue: date < today,
       }))
       .sort((left, right) => left.date - right.date);
   }, [tasks]);
@@ -324,7 +350,6 @@ function WorkspacePage({ projectCount }) {
         <article className="workspace-settings-card">
           <span className="workspace-settings-icon"><FiBriefcase size={17} /></span>
           <div><strong>Workspace details</strong><p>Personal workspace</p><small>Private · Only you and invited teammates can access this space.</small></div>
-          <button type="button" className="quiet-button">Edit</button>
         </article>
         <article className="workspace-settings-card">
           <span className="workspace-settings-icon"><FiUsers size={17} /></span>
@@ -341,11 +366,11 @@ function WorkspacePage({ projectCount }) {
   );
 }
 
-export default function WorkspacePages({ section, tasks, onNotify, onEditTask, onAddTask }) {
+export default function WorkspacePages({ section, tasks, activity = [], onNotify, onEditTask, onAddTask }) {
   const { projects } = useProjects();
   if (section === "messages") return <MessagesPage />;
-  if (section === "users") return <UsersPage onNotify={onNotify} />;
-  if (section === "activity") return <ActivityPage tasks={tasks} />;
+  if (section === "users") return <UsersPage />;
+  if (section === "activity") return <ActivityPage activity={activity} />;
   if (section === "calendar") return <CalendarPage tasks={tasks} onEditTask={onEditTask} onAddTask={onAddTask} />;
   if (section === "notifications") return <NotificationsPage tasks={tasks} />;
   if (section === "workspace") return <WorkspacePage projectCount={projects.length} />;

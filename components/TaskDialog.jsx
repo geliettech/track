@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { FiX } from "react-icons/fi";
-import { getTaskProject, PROJECTS } from "@/context/Projects";
+import { getTaskProject } from "@/context/Projects";
 import { useProjects } from "@/context/ProjectContext";
 
 const EMPTY_TASK = {
@@ -11,14 +11,17 @@ const EMPTY_TASK = {
   priority: "medium",
   status: "todo",
   date: "",
-  project: PROJECTS[0].name,
 };
 
 function toInputDate(value) {
   if (!value) return "";
   if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
   const parsed = new Date(value);
-  return Number.isNaN(parsed.getTime()) ? "" : parsed.toISOString().slice(0, 10);
+  if (Number.isNaN(parsed.getTime())) return "";
+  const year = parsed.getFullYear();
+  const month = String(parsed.getMonth() + 1).padStart(2, "0");
+  const day = String(parsed.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export default function TaskDialog({ task, initialStatus, initialProject, onClose, onSave }) {
@@ -26,7 +29,9 @@ export default function TaskDialog({ task, initialStatus, initialProject, onClos
   const [values, setValues] = useState(() => ({
     ...EMPTY_TASK,
     status: initialStatus || "todo",
-    project: initialProject || PROJECTS[0].name,
+    project: projects.some((project) => project.name === initialProject)
+      ? initialProject
+      : projects[0]?.name || "",
     ...(task
       ? {
           title: task.title || "",
@@ -34,7 +39,9 @@ export default function TaskDialog({ task, initialStatus, initialProject, onClos
           priority: task.priority || "medium",
           status: task.status || "todo",
           date: toInputDate(task.date),
-          project: getTaskProject(task),
+          project: projects.some((project) => project.name === getTaskProject(task))
+            ? getTaskProject(task)
+            : projects[0]?.name || "",
         }
       : {}),
   }));

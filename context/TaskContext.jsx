@@ -6,9 +6,39 @@ import InitialTasks from "./DefaultTasks.jsx";
 
 const TaskContext = createContext(null);
 
+const LEGACY_DEFAULT_DATES = {
+  "Design new ui presentation": "26 Aug 2022",
+  "Add more ui/ux mockups": "25 Aug 2022",
+  "Design few mobile screens": "26 Aug 2022",
+  "Create a tweet and promote": "27 Aug 2022",
+  "Design system update": "12 Nov 2022",
+  "Create brand guideline": "13 Nov 2022",
+  "Create wireframe for ios app": "14 Nov 2022",
+  "Create ui kit for layout": "15 Nov 2022",
+  "Add product to the market": "6 Jan 2022",
+  "Launch product promotion": "7 Jan 2022",
+  "Make twitter banner": "8 Jan 2022",
+};
+
+function migrateSavedTasks(savedTasks) {
+  const defaultTasksByTitle = new Map(InitialTasks.map((task) => [task.title, task]));
+  return savedTasks.map((task) => {
+    const defaultTask = defaultTasksByTitle.get(task.title);
+    if (!defaultTask) return task;
+    const hasLegacyDate = task.date === LEGACY_DEFAULT_DATES[task.title];
+    return {
+      ...task,
+      ...(hasLegacyDate ? { date: defaultTask.date } : {}),
+      priority: task.priority || defaultTask.priority || "medium",
+    };
+  });
+}
+
 export const TaskProvider = ({ children }) => {
   const [tasks, setTasks] = useState([]);
+  const [activity, setActivity] = useState([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [storageError, setStorageError] = useState("");
 
   useEffect(() => {
     try {
@@ -16,16 +46,27 @@ export const TaskProvider = ({ children }) => {
       if (storedTasks) {
         const parsedTasks = JSON.parse(storedTasks);
         if (Array.isArray(parsedTasks)) {
-          setTasks(parsedTasks);
+          setTasks(migrateSavedTasks(parsedTasks));
         } else {
           console.error("Saved tasks were not a list. Restoring sample tasks.");
+          setStorageError("Saved tasks could not be read. Sample tasks were restored.");
           setTasks(InitialTasks);
         }
       } else {
         setTasks(InitialTasks);
       }
+      const savedActivity = localStorage.getItem("activity");
+      if (savedActivity) {
+        const parsedActivity = JSON.parse(savedActivity);
+        if (Array.isArray(parsedActivity)) setActivity(parsedActivity);
+        else {
+          console.error("Saved activity was not a list. Restoring an empty activity feed.");
+          setStorageError("Saved activity could not be read. The activity feed was reset.");
+        }
+      }
     } catch (error) {
       console.error("Unable to load saved tasks.", error);
+      setStorageError("Unable to load saved tasks from this browser.");
       setTasks(InitialTasks);
     } finally {
       setIsLoaded(true);
@@ -36,10 +77,32 @@ export const TaskProvider = ({ children }) => {
     if (!isLoaded) return;
     try {
       localStorage.setItem("tasks", JSON.stringify(tasks));
+      setStorageError("");
     } catch (error) {
       console.error("Unable to save tasks to browser storage.", error);
+      setStorageError("Unable to save tasks. Check your browser storage settings.");
     }
   }, [isLoaded, tasks]);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+    try {
+      localStorage.setItem("activity", JSON.stringify(activity));
+    } catch (error) {
+      console.error("Unable to save activity to browser storage.", error);
+      setStorageError("Unable to save activity. Check your browser storage settings.");
+    }
+  }, [activity, isLoaded]);
+
+  const recordActivity = (action, task) => {
+    setActivity((current) => [{
+      id: uuidv4(),
+      action,
+      title: task.title,
+      project: task.project || "",
+      createdAt: new Date().toISOString(),
+    }, ...current].slice(0, 100));
+  };
 
   const createTask = (taskData) => {
     const task = {
@@ -54,6 +117,7 @@ export const TaskProvider = ({ children }) => {
       assignees: [],
     };
     setTasks((currentTasks) => [task, ...currentTasks]);
+    recordActivity("created", task);
     return task;
   };
 
@@ -67,6 +131,14 @@ export const TaskProvider = ({ children }) => {
     });
 
   const updateTask = (id, updates) => {
+    const existing = tasks.find((task) => task.id === id);
+    if (existing) {
+      const statusChanged = updates.status && updates.status !== existing.status;
+      const action = statusChanged
+        ? updates.status === "done" ? "completed" : updates.status === "todo" && existing.status === "done" ? "reopened" : "moved"
+        : "updated";
+      recordActivity(action, { ...existing, ...updates });
+    }
     setTasks((currentTasks) =>
       currentTasks.map((task) =>
         task.id === id
@@ -93,6 +165,13 @@ export const TaskProvider = ({ children }) => {
   };
 
   const updateTaskStatus = (id, newStatus, newProgress) => {
+    const existing = tasks.find((task) => task.id === id);
+    if (existing && existing.status !== newStatus) {
+      const action = newStatus === "done"
+        ? "completed"
+        : newStatus === "todo" && existing.status === "done" ? "reopened" : "moved";
+      recordActivity(action, { ...existing, status: newStatus });
+    }
     setTasks((currentTasks) =>
       currentTasks.map((task) =>
         task.id === id
@@ -109,6 +188,8 @@ export const TaskProvider = ({ children }) => {
   };
 
   const deleteTask = (id) => {
+    const deletedTask = tasks.find((task) => task.id === id);
+    if (deletedTask) recordActivity("deleted", deletedTask);
     setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
   };
 
@@ -119,7 +200,9 @@ export const TaskProvider = ({ children }) => {
     <TaskContext.Provider
       value={{
         tasks,
+        activity,
         isLoaded,
+        storageError,
         addTask,
         createTask,
         updateTask,
