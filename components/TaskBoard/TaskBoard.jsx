@@ -1,76 +1,114 @@
-// components/TaskBoard.js
 "use client";
-import React from 'react';
-import TaskCard from './TaskCard';
-import DragBox from './DragBox';
-import { useTasks } from '@/context/TaskContext';
-import { FiPlus } from 'react-icons/fi';
 
-export default function TaskBoard() {
-  const { tasks, addTask, filterStatus } = useTasks(); // Get filterStatus from context
+import { useState } from "react";
+import { FiPlus, FiSliders } from "react-icons/fi";
+import { useTasks } from "@/context/TaskContext";
+import TaskCard from "./TaskCard";
 
-  const handleAddTask = (status) => {
-    const title = prompt("Enter a title for the new task:");
-    if (title) {
-      addTask(title, status);
-    }
-  };
+const columns = [
+  { id: "todo", title: "To do", tone: "" },
+  { id: "inprogress", title: "In progress", tone: "progress" },
+  { id: "done", title: "Completed", tone: "done" },
+];
 
-  // Filter tasks based on the current filterStatus
-  const filteredTasks = filterStatus === 'all'
-    ? tasks
-    : tasks.filter(task => task.status === filterStatus);
-
-  const getCountByStatus = (status) => tasks.filter(task => task.status === status).length;
+export default function TaskBoard({
+  search,
+  activeSection,
+  onAddTask,
+  onEditTask,
+  onNotify,
+}) {
+  const { tasks, isLoaded } = useTasks();
+  const [priorityFilter, setPriorityFilter] = useState("all");
+  const shownColumns =
+    activeSection === "completed" ? columns.filter((column) => column.id === "done") : columns;
+  const normalizedSearch = search.trim().toLowerCase();
+  const matchingTasks = tasks.filter((task) => {
+    const matchesSection = activeSection !== "completed" || task.status === "done";
+    const matchesText =
+      !normalizedSearch ||
+      `${task.title || ""} ${task.description || ""} ${task.project || ""}`
+        .toLowerCase()
+        .includes(normalizedSearch);
+    const matchesPriority =
+      priorityFilter === "all" || (task.priority || "medium") === priorityFilter;
+    return matchesSection && matchesText && matchesPriority;
+  });
 
   return (
-    <div className="flex space-x-6 overflow-x-auto p-4">
-      {/* Conditionally render based on the filterStatus */}
-      {(filterStatus === 'all' || filterStatus === 'todo') && (
-        <div className="flex-1 w-[320px] min-w-[320px] space-y-4">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-between">
-            To do ({getCountByStatus('todo')})
-            <button onClick={() => handleAddTask('todo')} className="flex items-center space-x-1 text-sm text-slate-500 hover:text-indigo-500 transition-colors">
-              <FiPlus />
-              <span>Add new task</span>
-            </button>
-          </h2>
-          <div className="space-y-4">
-            {filteredTasks.filter(task => task.status === 'todo').map(task => <TaskCard key={task.id} task={task} />)}
-          </div>
+    <section aria-label="Task board">
+      <div className="board-heading">
+        <div>
+          <h3>{activeSection === "completed" ? "Completed tasks" : activeSection === "projects" ? "All projects" : "Your tasks"}</h3>
+          <span>{matchingTasks.length} {matchingTasks.length === 1 ? "task" : "tasks"} shown</span>
         </div>
-      )}
+      </div>
 
-      {(filterStatus === 'all' || filterStatus === 'inprogress') && (
-        <div className="flex-1 w-[320px] min-w-[320px] space-y-4">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-between">
-            In progress ({getCountByStatus('inprogress')})
-            <button onClick={() => handleAddTask('inprogress')} className="flex items-center space-x-1 text-sm text-slate-500 hover:text-indigo-500 transition-colors">
-              <FiPlus />
-              <span>Add new task</span>
-            </button>
-          </h2>
-          <div className="space-y-4">
-            {filteredTasks.filter(task => task.status === 'inprogress').map(task => <TaskCard key={task.id} task={task} />)}
-          </div>
+      <div className="board-toolbar">
+        <div className="toolbar-left">
+          <button type="button" className="quiet-button" aria-label="Board view">
+            <FiSliders size={14} /> Board view
+          </button>
         </div>
-      )}
+        <div className="toolbar-right">
+          <select
+            className="filter-select"
+            value={priorityFilter}
+            onChange={(event) => setPriorityFilter(event.target.value)}
+            aria-label="Filter by priority"
+          >
+            <option value="all">All priorities</option>
+            <option value="high">High priority</option>
+            <option value="medium">Medium priority</option>
+            <option value="low">Low priority</option>
+          </select>
+        </div>
+      </div>
 
-      {(filterStatus === 'all' || filterStatus === 'done') && (
-        <div className="flex-1 w-[320px] min-w-[320px] space-y-4">
-          <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100 flex items-center justify-between">
-            Done ({getCountByStatus('done')})
-            <button onClick={() => handleAddTask('done')} className="flex items-center space-x-1 text-sm text-slate-500 hover:text-indigo-500 transition-colors">
-              <FiPlus />
-              <span>Add new task</span>
-            </button>
-          </h2>
-          <div className="space-y-4">
-            {filteredTasks.filter(task => task.status === 'done').map(task => <TaskCard key={task.id} task={task} />)}
-          </div>
-          <DragBox />
-        </div>
-      )}
-    </div>
+      <div className={`kanban-board${activeSection === "completed" ? " is-filtered" : ""}`}>
+        {shownColumns.map((column) => {
+          const columnTasks = matchingTasks.filter((task) => task.status === column.id);
+          return (
+            <section className="kanban-column" key={column.id} aria-label={`${column.title} tasks`}>
+              <div className="column-title">
+                <span className={`column-indicator ${column.tone}`} aria-hidden="true" />
+                <h4>{column.title}</h4>
+                <span className="column-count">{columnTasks.length}</span>
+                <button
+                  type="button"
+                  className="task-menu-button column-add"
+                  onClick={() => onAddTask(column.id)}
+                  aria-label={`Add task to ${column.title}`}
+                >
+                  <FiPlus size={16} />
+                </button>
+              </div>
+
+              <div className="task-list">
+                {!isLoaded
+                  ? [0, 1, 2].map((item) => <div key={item} className="skeleton" aria-hidden="true" />)
+                  : columnTasks.length
+                    ? columnTasks.map((task) => (
+                        <TaskCard
+                          key={task.id}
+                          task={task}
+                          onEdit={onEditTask}
+                          onNotify={onNotify}
+                        />
+                      ))
+                    : (
+                        <div className="empty-column">
+                          <span>{normalizedSearch || priorityFilter !== "all" ? "No tasks match these filters." : "Nothing on your plate here."}</span>
+                          {!normalizedSearch && priorityFilter === "all" && (
+                            <button type="button" onClick={() => onAddTask(column.id)}>Add a task</button>
+                          )}
+                        </div>
+                      )}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    </section>
   );
 }

@@ -1,10 +1,11 @@
 import "./globals.css";
 import { TaskProvider } from "@/context/TaskContext";
+import { ProjectProvider } from "@/context/ProjectContext";
 import { ThemeProvider } from "@/context/ThemeContext";
 
 export const metadata = {
-  title: "3D Todo App",
-  description: "3D Todo App using next app, tailwindcss...",
+  title: "Track — Your work, in focus",
+  description: "A thoughtful workspace for planning, tracking, and finishing your tasks.",
 };
 
 export default function RootLayout({ children }) {
@@ -12,7 +13,9 @@ export default function RootLayout({ children }) {
     <html lang="en">
       <body>
         <ThemeProvider>
-          <TaskProvider>{children}</TaskProvider>
+          <ProjectProvider>
+            <TaskProvider>{children}</TaskProvider>
+          </ProjectProvider>
         </ThemeProvider>
       </body>
     </html>

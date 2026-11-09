@@ -4,6 +4,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Design new ui presentation",
+    project: "Zenith Link",
     description: "Dribbble marketing",
     status: "todo",
     progress: 7,
@@ -16,6 +17,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Add more ui/ux mockups",
+    project: "Zenith Link",
     description: "Pinterest promotion",
     status: "todo",
     progress: 4,
@@ -26,6 +28,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Design few mobile screens",
+    project: "Elevate",
     description: "Dropbox mobile app",
     status: "todo",
     progress: 3,
@@ -38,6 +41,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Create a tweet and promote",
+    project: "Vortex",
     description: "Twitter marketing",
     status: "todo",
     progress: 1,
@@ -50,6 +54,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Design system update",
+    project: "Zenith Link",
     description: "Oreo website project",
     status: "inprogress",
     progress: 3,
@@ -62,6 +67,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Create brand guideline",
+    project: "Zenith Link",
     description: "Oreo branding project",
     status: "inprogress",
     progress: 7,
@@ -74,6 +80,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Create wireframe for ios app",
+    project: "Elevate",
     description: "Oreo ios app project",
     status: "inprogress",
     progress: 4,
@@ -86,6 +93,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Create ui kit for layout",
+    project: "Solstice",
     description: "Crypto mobile app",
     status: "inprogress",
     progress: 3,
@@ -98,6 +106,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Add product to the market",
+    project: "Zenith Link",
     description: "Ulll marketplace",
     status: "done",
     progress: 10,
@@ -107,6 +116,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Launch product promotion",
+    project: "Zenith Link",
     description: "Kickstarter campaign",
     status: "done",
     progress: 10,
@@ -119,6 +129,7 @@ const InitialTasks = [
   {
     id: uuidv4(),
     title: "Make twitter banner",
+    project: "Vortex",
     description: "Twitter marketing",
     status: "done",
     progress: 10,

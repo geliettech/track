@@ -1,98 +1,84 @@
-## Project Overview
+# Track
 
+Track is a responsive task-management dashboard built with Next.js. It brings task planning, project views, and workspace navigation together in a polished interface with light and dark themes.
 
-Build a task management dashboard with full authentication,  to organize and track tasks using a Kanban-style board. It provides a clear, intuitive interface for managing project workflows from initial ideation to completion. The application is built to be scalable and maintainable, leveraging a robust and popular technology stack.
+> Track is currently a frontend-only application. It does not include authentication, a backend, or cloud synchronization. Tasks and user-created projects are stored in the browser.
 
------
+## Features
 
-## Key Features
+- **Overview:** Task summary cards, due-date visualization, and a searchable, filterable task schedule.
+- **Projects:** Browse projects and view their tasks as a board, backlog, or timeline; create projects and assign tasks.
+- **Task management:** Create and edit tasks with descriptions, priorities, statuses, due dates, and project assignments.
+- **Workspace navigation:** Overview, Projects, Messages, Users, Activity, Calendar, Notifications, Settings, and Workspace pages.
+- **Responsive sidebar:** Collapsible desktop navigation and a mobile drawer.
+- **Search and themes:** Search tasks and switch between light and dark themes.
+- **Browser persistence:** Tasks and user-created projects are saved in `localStorage`.
+- **3D background:** A Three.js / React Three Fiber visual background.
 
-  * **Kanban Board:** A three-column layout to visually manage tasks in `To Do`, `In Progress`, and `Done` states.
-  * **Dynamic Task Management:** Users can add new tasks, edit existing task title, and permanently delete tasks.
-  * **Interactive Progress Tracking:** Each task card features a real-time progress bar that automatically updates its value and color based on the task's status.
-  * **Intuitive UI/UX:** Features include smooth functionality for moving tasks by clicking on dotted line(...) on the todo cards, a persistent light/dark theme toggle, and a subtle hover-and-scale effect on task cards for enhanced user feedback.
-  * **Scalable Architecture:** Built with a React Context API for centralized state management, ensuring a predictable data flow and easy-to-manage application state.
-  * **A 3D background behind the task list:** created soft glowing particles that slowly float, giving a sense of depth.
+Messages and teammate information are frontend sample content; they are not connected to a messaging service or user directory.
 
------
+## Tech stack
 
-## Technical Stack
-* **authentication:** next/auth
-* **Framework:** Next.js (App Router) 
-* **Styling:** Tailwind CSS
-* **State Management:** React Context API
-* **Icons:** React Icons
-* **Data Handling:** `localStorage` for persistent data storage
-* **Unique Identifiers:** `uuid`
-* **3D:** React Three Fiber (Three.js)
+- [Next.js](https://nextjs.org/) 16 with the App Router
+- [React](https://react.dev/) 19
+- [Tailwind CSS](https://tailwindcss.com/) 4 and application styles in `app/globals.css`
+- [React Icons](https://react-icons.github.io/react-icons/)
+- [Three.js](https://threejs.org/) with [React Three Fiber](https://r3f.docs.pmnd.rs/)
+- React Context for task, project, and theme state
 
------
-
-## Project Setup
-
-These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
+## Getting started
 
 ### Prerequisites
 
-Ensure you have [Node.js](https://nodejs.org/) and [npm](https://www.npmjs.com/) installed on your system.
+- Node.js 20.9 or later
+- npm
 
-### Installation
-
-1.  Clone the repository to your local machine:
-    ```bash
-    git clone [https://github.com/geliettech/todo-app-3d]
-    ```
-2.  Navigate into the project directory:
-    ```bash
-    cd [todo-app-3d]
-    ```
-3.  Install all required dependencies:
-    ```bash
-    npm install
-    ```
-
-### Running the Application
-
-To start the development server, run the following command in your terminal:
+### Install and run
 
 ```bash
+git clone https://github.com/geliettech/track.git
+cd track
+npm install
 npm run dev
 ```
 
-The application will be accessible in your web browser at `http://localhost:3000`.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
------
+### Production build
 
-## Project Structure
-
-The codebase is organized into a clean and modular structure for clarity and ease of maintenance.
-
-```
-/my-task-board
-├── components/          # Reusable UI components (e.g., TaskCard, Sidebar)
-├── context/             # State management using React Context (e.g., TaskContext)
-├── app/                 # Next.js routing and root layout
-├── public/              # Static assets and images
-└── styles/              # Global styling and Tailwind configuration
+```bash
+npm run build
+npm run start
 ```
 
------
+The production server runs at [http://localhost:3000](http://localhost:3000) by default.
 
-## 🚀 Deployment
+## Project structure
 
-This project can be easily deployed to any hosting platform that supports Next.js.
+```text
+app/
+  globals.css             Global styles and responsive layouts
+  layout.js               Root layout and application providers
+  page.js                 Dashboard entry point
+components/
+  Dashboard.jsx           Main dashboard and section routing
+  Header.jsx              Search, theme, profile, and task actions
+  Overview.jsx            Workspace overview and task schedule
+  ProjectWorkspace.jsx    Project directory and project task views
+  SideBar.jsx             Responsive workspace navigation
+  TaskDialog.jsx          Task creation and editing
+  WorkspacePages.jsx      Messages, users, activity, calendar, and more
+  TaskBoard/              Kanban board and task cards
+context/
+  TaskContext.jsx         Task state and browser persistence
+  ProjectContext.jsx      Project state and browser persistence
+  ThemeContext.jsx        Theme state
+```
 
-  * [Vercel](https://vercel.com/) (recommended)
-  * [Netlify](https://www.netlify.com/)
+## Data and privacy
 
------
+Track does not send tasks or projects to a server. Task data is stored in the browser under `tasks`, and user-created projects under `projects`. Clearing this browser's site data removes those locally saved items. The app starts with example tasks and projects when no saved data is present.
 
-## 👨‍💻 Author
+## Deployment
 
-  * **OGE** – [@geliettech](https://github.com/geliettech)
-
------
-
-## 📜 License
-
-This project is licensed under the MIT License.
+Track can be deployed to a host that supports Next.js, such as [Vercel](https://vercel.com/). Configure the deployment to install dependencies with `npm install`, build with `npm run build`, and start with `npm run start`.

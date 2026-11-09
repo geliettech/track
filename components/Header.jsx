@@ -1,77 +1,123 @@
-// components/Header.jsx
 "use client";
-import React, { useState, useEffect } from "react";
-import Image from "next/image";
+
+import { useEffect, useState } from "react";
+import {
+  FiBell,
+  FiCheck,
+  FiChevronDown,
+  FiMenu,
+  FiMoon,
+  FiPlus,
+  FiSearch,
+  FiSun,
+} from "react-icons/fi";
 import { useTheme } from "@/context/ThemeContext";
 
-export default function Header() {
-  const [date, setDate] = useState("");
-  const { theme } = useTheme();
+export default function Header({ onAddTask, search, onSearchChange, onMenuClick }) {
+  const { theme, toggleTheme } = useTheme();
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [greeting, setGreeting] = useState("Good morning");
+  const date = new Intl.DateTimeFormat("en-US", {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  }).format(new Date());
 
   useEffect(() => {
-    const today = new Date();
-    const options = { year: "numeric", month: "short", day: "numeric" };
-    setDate(today.toLocaleDateString("en-GB", options)); // 'en-GB' gives this format "22 Sep 2025"
+    const hour = new Date().getHours();
+    setGreeting(hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
   }, []);
 
   return (
-    <header className="flex items-center justify-between header">
-      {/* header title */}
-      <h1 className="text-xl font-bold leading-5">Welcome back, Vincent 👋</h1>
-      {/* header right items (icons, date & Avatar) */}
-      <div className="flex items-center space-x-6">
-          <Image
-            src={
-              theme === "light"
-                ? "/header-img/search-light.png"
-                : "/header-img/search-dark.png"
-            }
-            alt="search Icon"
-            width={22}
-            height={22}
+    <header className="topbar">
+      <div className="greeting">
+        <h1>{greeting}, Jordan <span aria-hidden="true">✦</span></h1>
+        <p>{date} <span aria-hidden="true">·</span> Let&apos;s make today count.</p>
+      </div>
+
+      <div className="header-actions">
+        <button
+          type="button"
+          className="icon-button mobile-menu-button"
+          onClick={onMenuClick}
+          aria-label="Open navigation menu"
+        >
+          <FiMenu size={18} />
+        </button>
+        <label className="search-wrap">
+          <FiSearch size={16} aria-hidden="true" />
+          <input
+            type="search"
+            value={search}
+            onChange={(event) => onSearchChange(event.target.value)}
+            placeholder="Search tasks..."
+            aria-label="Search tasks"
           />
-        <div className="relative">
-          <Image
-            src={
-              theme === "light"
-                ? "/header-img/notification-light.png"
-                : "/header-img/notification-dark.png"
-            }
-            alt="notification Icon"
-            width={22}
-            height={22}
-            className="object-cover"
-          />
-          <div className="absolute top-[2px] right-[2px]">
-            <Image
-              src="/header-img/Badge.png"
-              alt="badge"
-              width={6}
-            height={6}
-            />
-          </div>
-        </div>
-        <div className="flex items-center space-x-2">
-          <Image
-            src={
-              theme === "light"
-                ? "/header-img/calendar-light.png"
-                : "/header-img/calendar-dark.png"
-            }
-            alt="calendar Icon"
-            width={22}
-            height={22} />
-          <span className="text-base font-semibold text-gray-500 leading-4">{date}</span>
+          <span className="search-shortcut" aria-hidden="true" />
+        </label>
+
+        <div className="notification-wrap">
+          <button
+            type="button"
+            className="icon-button"
+            onClick={() => setNotificationsOpen((open) => !open)}
+            aria-label="Notifications"
+            aria-expanded={notificationsOpen}
+          >
+            <FiBell size={17} />
+            <span className="notification-dot" />
+          </button>
+          {notificationsOpen && (
+            <div className="popover">
+              <h4>You&apos;re all caught up</h4>
+              <p>New task updates and reminders will appear here.</p>
+              <button type="button" onClick={() => setNotificationsOpen(false)}>
+                <FiCheck size={14} /> Mark all as read
+              </button>
+            </div>
+          )}
         </div>
 
-        <div className="relative w-10 h-10 rounded-full overflow-hidden">
-          <Image
-            src="/header-img/avatar.png"
-            alt="User Avatar"
-            fill
-            className="object-contain"
-          />
+        <button
+          type="button"
+          className="icon-button"
+          onClick={toggleTheme}
+          aria-label={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
+          title={`Switch to ${theme === "light" ? "dark" : "light"} theme`}
+        >
+          {theme === "light" ? <FiMoon size={17} /> : <FiSun size={17} />}
+        </button>
+
+        <div className="profile-menu-wrap">
+          <button
+            type="button"
+            className="icon-button profile-trigger"
+            onClick={() => setProfileOpen((open) => !open)}
+            aria-label="Open profile menu"
+            aria-expanded={profileOpen}
+          >
+            <span className="avatar" aria-hidden="true">JD</span>
+            <FiChevronDown size={13} />
+          </button>
+          {profileOpen && (
+            <div className="popover">
+              <h4>Jordan Davis</h4>
+              <p>Personal workspace</p>
+              <button type="button" onClick={() => setProfileOpen(false)}>
+                Profile settings
+              </button>
+              <button type="button" onClick={() => setProfileOpen(false)}>
+                Manage workspace
+              </button>
+            </div>
+          )}
         </div>
+
+        <button type="button" className="primary-button" onClick={onAddTask}>
+          <FiPlus size={16} aria-hidden="true" />
+          <span>Add task</span>
+        </button>
       </div>
     </header>
   );
