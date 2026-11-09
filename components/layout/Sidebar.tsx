@@ -58,9 +58,7 @@ function NavigationLink({
         className={active ? "text-accent" : "text-faint group-hover:text-ink"}
         aria-hidden="true"
       />
-      {!collapsed && (
-        <span className="flex-1 truncate">{route.label}</span>
-      )}
+      {!collapsed && <span className="flex-1 truncate">{route.label}</span>}
       {!collapsed && typeof badge === "number" && badge > 0 && (
         <span
           className={`rounded-full px-1.5 py-0.5 text-[10px] font-bold ${
@@ -130,7 +128,9 @@ export default function Sidebar({
                 <span className="font-display text-base font-bold tracking-tight text-ink">
                   Track
                 </span>
-                <span className="text-[10px] text-faint font-medium">Workspace OS</span>
+                <span className="text-[10px] text-faint font-medium">
+                  Workspace OS
+                </span>
               </div>
             )}
           </Link>
@@ -144,7 +144,11 @@ export default function Sidebar({
             aria-expanded={ariaExpanded}
             title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
-            {collapsed ? <FiChevronRight size={15} /> : <FiChevronLeft size={15} />}
+            {collapsed ? (
+              <FiChevronRight size={15} />
+            ) : (
+              <FiChevronLeft size={15} />
+            )}
           </button>
         </div>
 
@@ -176,7 +180,8 @@ export default function Sidebar({
                 <span>Upgrade to Pro</span>
               </div>
               <p className="text-[11px] text-muted leading-relaxed mb-2.5">
-                Manage tasks free forever. Upgrade for team chat, collaboration & business reports.
+                Manage tasks free forever. Upgrade for team chat, collaboration
+                & business reports.
               </p>
               <button
                 type="button"
@@ -187,59 +192,10 @@ export default function Sidebar({
               </button>
             </div>
           )}
-
-          {/* Project Shortcuts Section (Only if not collapsed) */}
-          {!collapsed && (
-            <div className="pt-1">
-              <div className="flex items-center justify-between px-3 mb-2">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-faint">
-                  Projects
-                </span>
-                <Link
-                  href="/projects"
-                  onClick={onClose}
-                  className="text-[11px] text-muted hover:text-accent font-medium flex items-center gap-0.5"
-                  title="View all projects"
-                >
-                  View all
-                </Link>
-              </div>
-              <div className="space-y-1">
-                {projects.slice(0, 5).map((project) => {
-                  const projectTasksCount = tasks.filter(
-                    (t) => (t.project || "") === project.name && t.status !== "done"
-                  ).length;
-
-                  return (
-                    <Link
-                      key={project.name}
-                      href={`/projects?name=${encodeURIComponent(project.name)}`}
-                      onClick={onClose}
-                      className="flex items-center justify-between rounded-xl px-3 py-1.5 text-xs text-muted hover:bg-surface-hover hover:text-ink transition-colors group"
-                    >
-                      <div className="flex items-center gap-2.5 truncate">
-                        <span
-                          className="size-2 rounded-full shrink-0 shadow-xs"
-                          style={{ backgroundColor: project.color }}
-                          aria-hidden="true"
-                        />
-                        <span className="truncate">{project.name}</span>
-                      </div>
-                      {projectTasksCount > 0 && (
-                        <span className="text-[10px] text-faint group-hover:text-muted">
-                          {projectTasksCount}
-                        </span>
-                      )}
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Footer Nav & Sign Out */}
-        <div className="p-3 border-t border-line/60 space-y-1">
+        <div className="p-3  space-y-1">
           {secondaryRoutes.map((route) => (
             <NavigationLink
               key={route.id}
@@ -249,7 +205,21 @@ export default function Sidebar({
               onNavigate={onClose}
             />
           ))}
-
+          {!collapsed && (
+            <div className="mt-2 flex items-center gap-2.5 rounded-xl border border-line bg-surface-muted/60 p-2">
+              <div className="grid size-7 shrink-0 place-items-center rounded-lg bg-accent text-[11px] font-bold text-white">
+                JD
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-ink">
+                  Jordan Davis
+                </p>
+                <p className="truncate text-[10px] text-muted">
+                  {activeWorkspace.name} · {activeWorkspace.role}
+                </p>
+              </div>
+            </div>
+          )}
           {/* Sign Out Button */}
           <button
             type="button"
@@ -260,23 +230,13 @@ export default function Sidebar({
             aria-label="Sign out"
             title={collapsed ? "Sign out" : undefined}
           >
-            <FiLogOut size={16} className="text-red-500 shrink-0" aria-hidden="true" />
+            <FiLogOut
+              size={16}
+              className="text-red-500 shrink-0"
+              aria-hidden="true"
+            />
             {!collapsed && <span>Sign out</span>}
           </button>
-
-          {!collapsed && (
-            <div className="mt-2 flex items-center gap-2.5 rounded-xl border border-line bg-surface-muted/60 p-2">
-              <div className="grid size-7 shrink-0 place-items-center rounded-lg bg-accent text-[11px] font-bold text-white">
-                JD
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-xs font-semibold text-ink">Jordan Davis</p>
-                <p className="truncate text-[10px] text-muted">
-                  {activeWorkspace.name} · {activeWorkspace.role}
-                </p>
-              </div>
-            </div>
-          )}
         </div>
       </aside>
 
