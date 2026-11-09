@@ -1,21 +1,32 @@
 "use client";
-import React, { createContext, useContext, useState, useEffect } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
 
-const ThemeContext = createContext();
+type Theme = "light" | "dark";
+type ThemeContextValue = {
+  theme: Theme;
+  setLight: () => void;
+  setDark: () => void;
+  toggleTheme: () => void;
+};
 
-export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState("light");
+const ThemeContext = createContext<ThemeContextValue | null>(null);
+
+export const ThemeProvider = ({ children }: { children: ReactNode }) => {
+  const [theme, setTheme] = useState<Theme>("light");
 
   useEffect(() => {
     // Load saved theme or fallback
     const savedTheme = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const initialTheme = savedTheme || (prefersDark ? "dark" : "light");
+    const initialTheme: Theme = savedTheme === "dark" || savedTheme === "light"
+      ? savedTheme
+      : (prefersDark ? "dark" : "light");
 
     applyTheme(initialTheme);
   }, []);
 
-  const applyTheme = (newTheme) => {
+  const applyTheme = (newTheme: Theme) => {
     setTheme(newTheme);
 
     // Remove both classes before adding new one
@@ -37,4 +48,8 @@ export const ThemeProvider = ({ children }) => {
   );
 };
 
-export const useTheme = () => useContext(ThemeContext);
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) throw new Error("useTheme must be used within a ThemeProvider.");
+  return context;
+};

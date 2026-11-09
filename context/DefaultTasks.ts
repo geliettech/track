@@ -1,6 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
+import type { Task } from "./types";
 
-function dateOffset(days) {
+function dateOffset(days: number): string {
   const date = new Date();
   date.setDate(date.getDate() + days);
   const year = date.getFullYear();
@@ -9,7 +10,7 @@ function dateOffset(days) {
   return `${year}-${month}-${day}`;
 }
 
-const InitialTasks = [
+const InitialTasks: Task[] = [
   {
     id: uuidv4(),
     title: "Design new ui presentation",

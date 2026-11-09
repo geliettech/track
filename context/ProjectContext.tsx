@@ -1,12 +1,23 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { PROJECTS } from "./Projects";
+import type { Project, ProjectUpdate } from "./types";
 
-const ProjectContext = createContext(null);
+type ProjectContextValue = {
+  projects: Project[];
+  isLoaded: boolean;
+  storageError: string;
+  createProject: (name: string, description: string, deadline?: string, color?: string) => Project;
+  updateProject: (currentName: string, updates: ProjectUpdate) => Project;
+  deleteProject: (name: string) => void;
+};
 
-export function ProjectProvider({ children }) {
-  const [projects, setProjects] = useState(PROJECTS);
+const ProjectContext = createContext<ProjectContextValue | null>(null);
+
+export function ProjectProvider({ children }: { children: ReactNode }) {
+  const [projects, setProjects] = useState<Project[]>(PROJECTS);
   const [isLoaded, setIsLoaded] = useState(false);
   const [storageError, setStorageError] = useState("");
 
@@ -17,7 +28,7 @@ export function ProjectProvider({ children }) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed)) {
           const names = new Set(PROJECTS.map((project) => project.name.toLowerCase()));
-          const extraProjects = parsed.filter((project) => {
+          const extraProjects = parsed.filter((project: Project) => {
             if (!project || typeof project.name !== "string" || !project.name.trim()) return false;
             const name = project.name.trim().toLowerCase();
             if (names.has(name)) return false;
@@ -26,7 +37,7 @@ export function ProjectProvider({ children }) {
           });
           setProjects([...PROJECTS, ...extraProjects]);
         } else if (Array.isArray(parsed.projects)) {
-          setProjects(parsed.projects.filter((project) =>
+          setProjects(parsed.projects.filter((project: Project) =>
             project &&
             typeof project.name === "string" &&
             project.name.trim() &&
@@ -56,7 +67,7 @@ export function ProjectProvider({ children }) {
     }
   }, [isLoaded, projects]);
 
-  const createProject = (name, description, deadline = "") => {
+  const createProject = (name: string, description: string, deadline = "", color?: string): Project => {
     const cleanName = name.trim();
     if (!cleanName) throw new Error("Enter a name for your project.");
     if (projects.some((project) => project.name.toLowerCase() === cleanName.toLowerCase())) {
@@ -66,14 +77,14 @@ export function ProjectProvider({ children }) {
     const project = {
       name: cleanName,
       description: description.trim() || "A new project, ready to take shape.",
-      color: colors[projects.length % colors.length],
+      color: color || colors[projects.length % colors.length],
       deadline,
     };
     setProjects((current) => [...current, project]);
     return project;
   };
 
-  const updateProject = (currentName, updates) => {
+  const updateProject = (currentName: string, updates: ProjectUpdate): Project => {
     const cleanName = updates.name.trim();
     if (!cleanName) throw new Error("Enter a name for your project.");
     if (projects.some((project) =>
@@ -89,6 +100,7 @@ export function ProjectProvider({ children }) {
       name: cleanName,
       description: updates.description.trim() || "A project, ready to take shape.",
       deadline: updates.deadline,
+      ...(updates.color ? { color: updates.color } : {}),
     };
     setProjects((current) =>
       current.map((project) => project.name === currentName ? nextProject : project)
@@ -96,7 +108,7 @@ export function ProjectProvider({ children }) {
     return nextProject;
   };
 
-  const deleteProject = (name) => {
+  const deleteProject = (name: string) => {
     if (projects.length < 2) throw new Error("Keep at least one project in your workspace.");
     if (!projects.some((project) => project.name === name)) {
       throw new Error("This project no longer exists.");

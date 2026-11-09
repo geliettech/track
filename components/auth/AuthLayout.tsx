@@ -1,6 +1,6 @@
 "use client";
 
-import { FiCheck, FiMoon, FiSun } from "react-icons/fi";
+import { FiCheck, FiMoon, FiSun, FiTarget } from "react-icons/fi";
 import { useTheme } from "@/context/ThemeContext";
 import type { ReactNode } from "react";
 
@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
     <main className="auth-page">
       <section className="auth-story" aria-label="About Track">
         <a className="auth-brand" href="/overview" aria-label="Track home">
-          <span className="auth-brand-mark" aria-hidden="true"><FiCheck /></span>
+          <span className="auth-brand-mark" aria-hidden="true"><FiTarget /></span>
           <span>track</span>
         </a>
 

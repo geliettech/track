@@ -1,12 +1,27 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
-import InitialTasks from "./DefaultTasks.jsx";
+import InitialTasks from "./DefaultTasks";
+import type { ActivityEvent, Task, TaskAction, TaskInput, TaskStatus, TaskUpdate } from "./types";
 
-const TaskContext = createContext(null);
+type TaskContextValue = {
+  tasks: Task[];
+  activity: ActivityEvent[];
+  isLoaded: boolean;
+  storageError: string;
+  addTask: (title: string, status?: TaskStatus, project?: string) => Task;
+  createTask: (taskData: TaskInput) => Task;
+  updateTask: (id: string, updates: TaskUpdate) => void;
+  updateTaskStatus: (id: string, newStatus: TaskStatus, newProgress?: number) => void;
+  deleteTask: (id: string) => void;
+  editTask: (id: string, newTitle: string, newDescription: string) => void;
+};
 
-const LEGACY_DEFAULT_DATES = {
+const TaskContext = createContext<TaskContextValue | null>(null);
+
+const LEGACY_DEFAULT_DATES: Record<string, string> = {
   "Design new ui presentation": "26 Aug 2022",
   "Add more ui/ux mockups": "25 Aug 2022",
   "Design few mobile screens": "26 Aug 2022",
@@ -20,7 +35,7 @@ const LEGACY_DEFAULT_DATES = {
   "Make twitter banner": "8 Jan 2022",
 };
 
-function migrateSavedTasks(savedTasks) {
+function migrateSavedTasks(savedTasks: Task[]): Task[] {
   const defaultTasksByTitle = new Map(InitialTasks.map((task) => [task.title, task]));
   return savedTasks.map((task) => {
     const defaultTask = defaultTasksByTitle.get(task.title);
@@ -34,9 +49,11 @@ function migrateSavedTasks(savedTasks) {
   });
 }
 
-export const TaskProvider = ({ children }) => {
-  const [tasks, setTasks] = useState([]);
-  const [activity, setActivity] = useState([]);
+type TaskProviderProps = { children: ReactNode };
+
+export const TaskProvider = ({ children }: TaskProviderProps) => {
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [activity, setActivity] = useState<ActivityEvent[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [storageError, setStorageError] = useState("");
 
@@ -46,7 +63,7 @@ export const TaskProvider = ({ children }) => {
       if (storedTasks) {
         const parsedTasks = JSON.parse(storedTasks);
         if (Array.isArray(parsedTasks)) {
-          setTasks(migrateSavedTasks(parsedTasks));
+          setTasks(migrateSavedTasks(parsedTasks as Task[]));
         } else {
           console.error("Saved tasks were not a list. Restoring sample tasks.");
           setStorageError("Saved tasks could not be read. Sample tasks were restored.");
@@ -94,7 +111,7 @@ export const TaskProvider = ({ children }) => {
     }
   }, [activity, isLoaded]);
 
-  const recordActivity = (action, task) => {
+  const recordActivity = (action: TaskAction, task: { title: string; project?: string; [key: string]: unknown }) => {
     setActivity((current) => [{
       id: uuidv4(),
       action,
@@ -104,8 +121,8 @@ export const TaskProvider = ({ children }) => {
     }, ...current].slice(0, 100));
   };
 
-  const createTask = (taskData) => {
-    const task = {
+  const createTask = (taskData: TaskInput): Task => {
+    const task: Task = {
       id: uuidv4(),
       title: taskData.title.trim(),
       description: taskData.description.trim(),
@@ -121,16 +138,17 @@ export const TaskProvider = ({ children }) => {
     return task;
   };
 
-  const addTask = (title, status = "todo") =>
+  const addTask = (title: string, status: TaskStatus = "todo", project = "ShiftX") =>
     createTask({
       title,
       description: "New task added.",
       status,
       priority: "medium",
       date: new Date().toISOString().slice(0, 10),
+      project,
     });
 
-  const updateTask = (id, updates) => {
+  const updateTask = (id: string, updates: TaskUpdate) => {
     const existing = tasks.find((task) => task.id === id);
     if (existing) {
       const statusChanged = updates.status && updates.status !== existing.status;
@@ -164,7 +182,7 @@ export const TaskProvider = ({ children }) => {
     );
   };
 
-  const updateTaskStatus = (id, newStatus, newProgress) => {
+  const updateTaskStatus = (id: string, newStatus: TaskStatus, newProgress?: number) => {
     const existing = tasks.find((task) => task.id === id);
     if (existing && existing.status !== newStatus) {
       const action = newStatus === "done"
@@ -187,13 +205,13 @@ export const TaskProvider = ({ children }) => {
     );
   };
 
-  const deleteTask = (id) => {
+  const deleteTask = (id: string) => {
     const deletedTask = tasks.find((task) => task.id === id);
     if (deletedTask) recordActivity("deleted", deletedTask);
     setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
   };
 
-  const editTask = (id, newTitle, newDescription) =>
+  const editTask = (id: string, newTitle: string, newDescription: string) =>
     updateTask(id, { title: newTitle, description: newDescription });
 
   return (
