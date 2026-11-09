@@ -17,6 +17,14 @@ Track is a responsive productivity dashboard for planning, prioritizing, and tra
 
 The app includes sample tasks, projects, and workspace content to demonstrate the interface without connecting to any external services. Authentication forms validate input but clearly report that authentication is not connected; no account or email action is simulated.
 
+## Tools
+- Next.js 16 with the App Router.
+- React 19.
+- TypeScript
+- Tailwind CSS 4.
+- React Context for task and project state.
+
+
 ## Authentication routes
 
 - `/` — redirects to `/login`
