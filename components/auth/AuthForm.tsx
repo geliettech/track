@@ -14,7 +14,6 @@ import {
 } from "./auth-validation";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
-import router from "next/dist/shared/lib/router/router";
 
 type FormCopy = {
   eyebrow: string;
@@ -118,8 +117,6 @@ function PasswordField({
   showStrength = false,
   autoComplete,
 }: PasswordFieldProps) {
-  const supabase = createClient();
-  const router = useRouter();
   const [visible, setVisible] = useState(false);
   const strengthId = `${id}-strength`;
   const describedBy =
